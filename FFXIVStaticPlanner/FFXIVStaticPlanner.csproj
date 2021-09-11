@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FFXIVStaticPlanner.Core\FFXIVStaticPlanner.Core.csproj" />
+    <ProjectReference Include="..\FFXIVStaticPlanner.Data\FFXIVStaticPlanner.Data.csproj" />
+    <ProjectReference Include="..\FFXIVStaticPlanner.Views\FFXIVStaticPlanner.Views.csproj" />
+  </ItemGroup>
+
+</Project>

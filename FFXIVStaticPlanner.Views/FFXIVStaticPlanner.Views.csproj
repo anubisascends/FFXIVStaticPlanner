@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon />
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="VIews\Arrow_RedoRetry_16xLG_color.png" />
+    <None Remove="VIews\Arrow_UndoRevertRestore_16xLG_color.png" />
+    <None Remove="VIews\DeleteHS.png" />
+    <None Remove="VIews\document_32xLG.png" />
+    <None Remove="VIews\EraseTool_203.png" />
+    <None Remove="VIews\image.png" />
+    <None Remove="VIews\Pen4_48x.png" />
+    <None Remove="VIews\save_16xLG.png" />
+    <None Remove="VIews\Select.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FFXIVStaticPlanner.Core\FFXIVStaticPlanner.Core.csproj" />
+    <ProjectReference Include="..\FFXIVStaticPlanner.Data\FFXIVStaticPlanner.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\document_32xLG.png" />
+    <Resource Include="Images\image.png" />
+    <Resource Include="Images\DeleteHS.png" />
+    <Resource Include="Images\Pen4_48x.png" />
+    <Resource Include="Images\save_16xLG.png" />
+    <Resource Include="Images\Select.png" />
+    <Resource Include="Images\EraseTool_203.png" />
+    <Resource Include="Images\Arrow_RedoRetry_16xLG_color.png" />
+    <Resource Include="Images\Arrow_UndoRevertRestore_16xLG_color.png" />
+  </ItemGroup>
+
+</Project>
