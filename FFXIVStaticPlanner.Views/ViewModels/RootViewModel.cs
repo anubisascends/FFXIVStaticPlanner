@@ -37,7 +37,8 @@ namespace FFXIVStaticPlanner.ViewModels
         private bool _bBG = false;
         private string _strFilter;
         private ICollectionView _objView;
-        private string _strLayer = c_strAnnotations;
+        private string _strLayer;
+        private Cursor _objCursor;
 
         public RootViewModel ( ) : base ( )
         {
@@ -60,9 +61,19 @@ namespace FFXIVStaticPlanner.ViewModels
             get;
         }
 
+        public Cursor Cursor
+        {
+            get => _objCursor ??= Cursors.Arrow;
+            set
+            {
+                _objCursor = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
         public string SelectedLayer
         {
-            get => _strLayer;
+            get => _strLayer ??= c_strAnnotations;
             set
             {
                 _strLayer = value;
@@ -73,7 +84,7 @@ namespace FFXIVStaticPlanner.ViewModels
 
         public string FilterText
         {
-            get => _strFilter;
+            get => _strFilter ??= string.Empty;
             set
             {
                 _strFilter = value;
@@ -198,13 +209,25 @@ namespace FFXIVStaticPlanner.ViewModels
 
         private bool canUndo ( object obj ) => throw new System.NotImplementedException ( );
 
-        private void onChangeEditMode ( object obj ) => EditingMode = obj.ToString ( ) switch
+        private void onChangeEditMode ( object obj )
         {
-            "point" => InkCanvasEditingMode.EraseByPoint,
-            "stroke" => InkCanvasEditingMode.EraseByStroke,
-            "select" => InkCanvasEditingMode.Select,
-            _ => InkCanvasEditingMode.Ink
-        };
+            string strMode = obj.ToString();
+
+            EditingMode = strMode switch
+            {
+                "point" => InkCanvasEditingMode.EraseByPoint,
+                "stroke" => InkCanvasEditingMode.EraseByStroke,
+                "select" => InkCanvasEditingMode.Select,
+                _ => InkCanvasEditingMode.Ink
+            };
+
+            Cursor = strMode switch
+            {
+                "stroke" => Cursors.Hand,
+                "point" => Cursors.Hand,
+                _ => Cursors.Arrow
+            };
+        }
 
         private void onChangeBrushSize ( object obj )
         {

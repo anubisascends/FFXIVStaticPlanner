@@ -172,9 +172,9 @@
                 
                 <ListBox ItemsSource="{Binding ImageView}"
                      SelectedItem="{Binding SelectedImage}" Grid.Row="1"
-                         PreviewMouseDown="ListBox_PreviewMouseDown"
-                         PreviewMouseMove="ListBox_PreviewMouseMove"
-                         PreviewMouseUp="ListBox_PreviewMouseUp">
+                         PreviewMouseDown="onListboxMouseDown"
+                         PreviewMouseMove="onListboxMouseMove"
+                         PreviewMouseUp="onListboxMouseUp">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel ItemHeight="55" ItemWidth="55" MaxWidth="{Binding ElementName=cd, Path=Width.Value}"/>
@@ -203,13 +203,13 @@
             
             <GridSplitter Width="5"/>
 
-            <Canvas Grid.Column="1" x:Name="bgCanvas" IsHitTestVisible="{Binding EnableBackground}" Drop="Canvas_Drop" AllowDrop="True" 
-                    Background="Transparent"/>
-            <Canvas Grid.Column="1" x:Name="playerCanvas" IsHitTestVisible="{Binding EnablePlayers}" Drop="Canvas_Drop" AllowDrop="True" 
-                    Background="Transparent"/>
+            <Canvas Grid.Column="1" x:Name="bgCanvas" IsHitTestVisible="{Binding EnableBackground}" Drop="onCanvasDrop" AllowDrop="True" 
+                    Background="Transparent" Cursor="{Binding Cursor}"/>
+            <Canvas Grid.Column="1" x:Name="playerCanvas" IsHitTestVisible="{Binding EnablePlayers}" Drop="onCanvasDrop" AllowDrop="True" 
+                    Background="Transparent" Cursor="{Binding Cursor}"/>
             <InkCanvas Grid.Column="1" Strokes="{Binding Document.Strokes}" DefaultDrawingAttributes="{Binding DrawingAttributes}"
                        EditingMode="{Binding EditingMode}" AllowDrop="True"
-                       Drop="Canvas_Drop" Background="Transparent"
+                       Drop="onCanvasDrop" Background="Transparent"
                        IsHitTestVisible="{Binding EnableAnnotations}"/>
         </Grid>
     </Grid>

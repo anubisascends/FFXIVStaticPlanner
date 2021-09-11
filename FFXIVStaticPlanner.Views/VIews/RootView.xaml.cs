@@ -16,15 +16,16 @@ namespace FFXIVStaticPlanner.Views
     {
         private bool _bEnableDrag;
         private bool _bImageMove;
+        private Image _objCurrentImage;
 
         public RootView ( ) => InitializeComponent ( );
 
-        private void ListBox_PreviewMouseDown ( object sender , MouseButtonEventArgs e )
+        private void onListboxMouseDown ( object sender , MouseButtonEventArgs e )
         {
             _bEnableDrag = true;
         }
 
-        private void ListBox_PreviewMouseMove ( object sender , MouseEventArgs e )
+        private void onListboxMouseMove ( object sender , MouseEventArgs e )
         {
             if ( _bEnableDrag )
             {
@@ -33,12 +34,18 @@ namespace FFXIVStaticPlanner.Views
                     if ( listBox.SelectedItem is ImageData imageData )
                     {
                         DragDrop.DoDragDrop ( listBox , imageData , DragDropEffects.Link );
+                        listBox.SelectedIndex = -1;
                     }
                 }
             }
         }
 
-        private void Canvas_Drop ( object sender , DragEventArgs e )
+        private void onListboxMouseUp ( object sender , MouseButtonEventArgs e )
+        {
+            _bEnableDrag = false;
+        }
+
+        private void onCanvasDrop ( object sender , DragEventArgs e )
         {
             var p = e.GetPosition(sender as IInputElement);
             var model = DataContext as RootViewModel;
@@ -71,6 +78,7 @@ namespace FFXIVStaticPlanner.Views
 
             Canvas.SetLeft ( displayImage , image.Location.X - (displayImage.Width / 2) );
             Canvas.SetTop ( displayImage , image.Location.Y - (displayImage.Height / 2) );
+            Canvas.SetZIndex ( displayImage , model.Document.Images.Count );
 
             _bEnableDrag = false;
 
@@ -81,7 +89,11 @@ namespace FFXIVStaticPlanner.Views
 
         private void onImageMouseUp ( object sender , MouseButtonEventArgs e )
         {
-            _bImageMove = false;
+            if ( _bImageMove )
+            {
+                _bImageMove = false;
+                _objCurrentImage = null;
+            }
         }
 
         private void onImageMouseMove ( object sender , MouseEventArgs e )
@@ -100,7 +112,7 @@ namespace FFXIVStaticPlanner.Views
                     p = e.GetPosition ( bgCanvas );
                 }
 
-                var image = sender as Image;
+                var image = _objCurrentImage;
 
                 Canvas.SetLeft ( image , p.X - (image.Width / 2) );
                 Canvas.SetTop ( image , p.Y - (image.Height / 2) );
@@ -109,12 +121,18 @@ namespace FFXIVStaticPlanner.Views
 
         private void onImageMouseDown ( object sender , MouseButtonEventArgs e )
         {
-            _bImageMove = true;
+            var parent = _objCurrentImage.Parent as Canvas;
+
+            if ( parent.Cursor.Equals ( Cursors.Hand ) )
+            {
+                parent.Children.Remove ( _objCurrentImage );
+            }
+            else
+            {
+                _objCurrentImage = sender as Image;
+                _bImageMove = true;
+            }
         }
 
-        private void ListBox_PreviewMouseUp ( object sender , MouseButtonEventArgs e )
-        {
-            _bEnableDrag = false;
-        }
     }
 }
