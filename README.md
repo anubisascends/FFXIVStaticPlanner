@@ -16,6 +16,12 @@ Here is an example of the current UI (images included in the below image have be
 
 ![sample](https://lbmkca.bl.files.1drv.com/y4phaBTDwgcQn5nbSwt3z7vGgZ_vBbPR6q_DzgVj1-dotHKyoi7W4ThozXLc324JLNCaYkwJblPAePUMSz_E9dYS-qOOE9jKL1bkLrKRzG1fd4hYwHec5iR97gNj5uQZ5ZCqdZs4mW6-69CbmrII48I4H3i9csyROv96T9fKAMyDDdIOZ1D9E7SLN-zv8BmidgU/Sample_StaticPlanner.PNG?psid=1)
 
+## Links to Images
+The following links will provide you with several images that you can import into the app.  Just go to the Images tab, and click on the Add Image command.
+
+- https://github.com/xivapi/classjob-icons
+- https://www.reddit.com/r/ffxiv/comments/am5e3p/got_bored_at_work_today_and_decided_to_make_all/efjgzb5/?context=3
+
 ## Dependent Software
 
 To compile this project, it is recommended that you have the following softwares installed:
