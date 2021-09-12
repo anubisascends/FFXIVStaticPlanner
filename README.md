@@ -1,5 +1,21 @@
 # FFXIVStaticPlanner
 
+## Introduction
+
+This software helps to assist in the planning and teaching of Static events held by players in the 'Award Winning' Final Fantasy XIV MMORPG.
+
+You have the ability to add:
+
+- Images
+- Basic Shapes (Currently Rectangles and Ellipsis')
+- Simple Drawing Annotations
+
+You can also save your information to a file and then open it back up for later editing/consumption.
+
+Here is an example of the current UI (images included in the below image have been linked to later in this document):
+
+![sample](https://lbmkca.bl.files.1drv.com/y4phaBTDwgcQn5nbSwt3z7vGgZ_vBbPR6q_DzgVj1-dotHKyoi7W4ThozXLc324JLNCaYkwJblPAePUMSz_E9dYS-qOOE9jKL1bkLrKRzG1fd4hYwHec5iR97gNj5uQZ5ZCqdZs4mW6-69CbmrII48I4H3i9csyROv96T9fKAMyDDdIOZ1D9E7SLN-zv8BmidgU/Sample_StaticPlanner.PNG?psid=1)
+
 ## Dependent Software
 
 To compile this project, it is recommended that you have the following softwares installed:
