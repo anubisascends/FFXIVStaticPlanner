@@ -3,8 +3,11 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-              mc:Ignorable="d"
+              xmlns:vms="clr-namespace:FFXIVStaticPlanner.ViewModels"
               Title="Static Planner" Height="450" Width="800">
+    <RibbonWindow.Resources>
+        <vms:LayersToBoolConverter x:Key="layersToBool"/>
+    </RibbonWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -32,11 +35,11 @@
                     <RibbonRadioButton Label="Erase Whole" Command="{Binding ChangeEditMode}" CommandParameter="stroke" SmallImageSource="/FFXIVStaticPlanner.Views;component/Images/EraseTool_203.png"/>
                     <RibbonRadioButton Label="Erase Point" Command="{Binding ChangeEditMode}" CommandParameter="point"/>
                     <RibbonComboBox SelectionBoxWidth="100" Label="Layer">
-                        <RibbonGallery SelectedValue="{Binding SelectedLayer}" SelectedValuePath="Content" MaxColumnCount="1">
+                        <RibbonGallery SelectedValue="{Binding SelectedLayer}" SelectedValuePath="Tag" MaxColumnCount="1">
                             <RibbonGalleryCategory>
-                                <RibbonGalleryItem Content="Annotations"/>
-                                <RibbonGalleryItem Content="Players"/>
-                                <RibbonGalleryItem Content="Background"/>
+                                <RibbonGalleryItem Content="Annotations" Tag="{x:Static vms:Layers.Annotations}"/>
+                                <RibbonGalleryItem Content="Players" Tag="{x:Static vms:Layers.Players}"/>
+                                <RibbonGalleryItem Content="Background" Tag="{x:Static vms:Layers.Background}"/>
                             </RibbonGalleryCategory>
                         </RibbonGallery>
                     </RibbonComboBox>
@@ -253,13 +256,13 @@
             
             <GridSplitter Width="5"/>
 
-            <Canvas Grid.Column="1" x:Name="bgCanvas" IsHitTestVisible="{Binding EnableBackground}" AllowDrop="True" 
-                    Background="Transparent" Cursor="{Binding Cursor}"/>
-            <Canvas Grid.Column="1" x:Name="playerCanvas" IsHitTestVisible="{Binding EnablePlayers}" AllowDrop="True" 
-                    Background="Transparent" Cursor="{Binding Cursor}"/>
+            <Canvas Grid.Column="1" x:Name="bgCanvas" IsHitTestVisible="{Binding Path=SelectedLayer, Converter={StaticResource layersToBool}, ConverterParameter={x:Static vms:Layers.Background}}"
+                    AllowDrop="True" Background="Transparent" Cursor="{Binding Cursor}"/>
+            <Canvas Grid.Column="1" x:Name="playerCanvas" IsHitTestVisible="{Binding Path=SelectedLayer, Converter={StaticResource layersToBool}, ConverterParameter={x:Static vms:Layers.Players}}"
+                    AllowDrop="True" Background="Transparent" Cursor="{Binding Cursor}"/>
             <InkCanvas Grid.Column="1" Strokes="{Binding Document.Strokes}" DefaultDrawingAttributes="{Binding DrawingAttributes}"
                        EditingMode="{Binding EditingMode}" AllowDrop="True" x:Name="inkCanvas" Background="Transparent"
-                       IsHitTestVisible="{Binding EnableAnnotations}"/>
+                       IsHitTestVisible="{Binding Path=SelectedLayer, Converter={StaticResource layersToBool}, ConverterParameter={x:Static vms:Layers.Annotations}}"/>
         </Grid>
     </Grid>
 </RibbonWindow>

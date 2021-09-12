@@ -20,9 +20,6 @@ namespace FFXIVStaticPlanner.ViewModels
 {
     public class RootViewModel : ViewModel<RootView>
     {
-        private const string c_strAnnotations = "Annotations";
-        private const string c_strBackground = "Background";
-        private const string c_strPlayers = "Players";
         private const string c_strPoint = "point";
         private const string c_strStroke = "stroke";
         private const string c_strSelect = "select";
@@ -44,7 +41,6 @@ namespace FFXIVStaticPlanner.ViewModels
         private bool _bBG = false;
         private string _strFilter;
         private ICollectionView _objView;
-        private string _strLayer;
         private Cursor _objCursor;
         private ICommand _drawRect;
         private ICommand _drawEllip;
@@ -58,6 +54,7 @@ namespace FFXIVStaticPlanner.ViewModels
         public Shape _shape;
         private bool _bShapeMove;
         private double _dImageSize = 96;
+        private Layers _eLayer = Layers.Annotations;
 
         public RootViewModel ( ) 
         {
@@ -106,14 +103,13 @@ namespace FFXIVStaticPlanner.ViewModels
             get; set;
         } = false;
 
-        public string SelectedLayer
+        public Layers SelectedLayer
         {
-            get => _strLayer ??= c_strAnnotations;
+            get => _eLayer;
             set
             {
-                _strLayer = value;
+                _eLayer = value;
                 RaisePropertyChanged ( );
-                setLayer ( );
             }
         }
 
@@ -330,7 +326,7 @@ namespace FFXIVStaticPlanner.ViewModels
             DrawShape = true;
         }
 
-        private bool canDrawShape ( object obj ) => SelectedLayer == c_strBackground;
+        private bool canDrawShape ( object obj ) => SelectedLayer == Layers.Background;
 
         private void onClearFilter ( object obj ) => FilterText = string.Empty;
 
@@ -569,11 +565,11 @@ namespace FFXIVStaticPlanner.ViewModels
             {
                 var p = new Point(0,0);
 
-                if ( EnablePlayers )
+                if ( SelectedLayer == Layers.Players )
                 {
                     p = e.GetPosition ( Window.playerCanvas );
                 }
-                else if ( EnableBackground )
+                else if ( SelectedLayer == Layers.Background )
                 {
                     p = e.GetPosition ( Window.bgCanvas );
                 }
@@ -776,28 +772,6 @@ namespace FFXIVStaticPlanner.ViewModels
             }
 
             _bShapeMove = true;
-        }
-
-        private void setLayer ( )
-        {
-            switch ( _strLayer )
-            {
-                case c_strAnnotations:
-                    EnableAnnotations = true;
-                    EnableBackground = false;
-                    EnablePlayers = false;
-                    break;
-                case c_strBackground:
-                    EnableAnnotations = false;
-                    EnableBackground = true;
-                    EnablePlayers = false;
-                    break;
-                default:
-                    EnableAnnotations = false;
-                    EnableBackground = false;
-                    EnablePlayers = true;
-                    break;
-            }
         }
     }
 }
