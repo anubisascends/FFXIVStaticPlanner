@@ -422,7 +422,7 @@ namespace FFXIVStaticPlanner.ViewModels
         {
             var dlgView = new OpenFileDialog
             {
-                Filter = "Image Files|*.png|All Files|*.*",
+                Filter = "Image Files|*.png;*.svg|All Files|*.*",
                 Title = "Please select the image(s) you want to add...",
                 Multiselect = true
             };
@@ -431,9 +431,17 @@ namespace FFXIVStaticPlanner.ViewModels
             {
                 foreach ( var item in dlgView.FileNames )
                 {
-                    var raw  = File.ReadAllBytes(item);
                     var name = Path.GetFileNameWithoutExtension(item);
-                    ImageManager.AddImage ( raw , name , name );
+
+                    switch ( Path.GetExtension(item) )
+                    {
+                        case ".svg":
+                            ImageManager.AddImage ( File.ReadAllText(item) , name , name );
+                            break;
+                        default:
+                            ImageManager.AddImage ( File.ReadAllBytes(item) , name , name );
+                            break;
+                    }
                 }
             }
 

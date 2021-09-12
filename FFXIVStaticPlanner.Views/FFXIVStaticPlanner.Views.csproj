@@ -22,10 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharpVectors" Version="1.7.6" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FFXIVStaticPlanner.Core\FFXIVStaticPlanner.Core.csproj" />
     <ProjectReference Include="..\FFXIVStaticPlanner.Data\FFXIVStaticPlanner.Data.csproj" />
   </ItemGroup>

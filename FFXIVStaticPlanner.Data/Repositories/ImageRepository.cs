@@ -1,5 +1,10 @@
-﻿using System;
+﻿using SharpVectors.Converters;
+using SharpVectors.Renderers.Wpf;
+using System;
 using System.IO;
+using System.Windows;
+using System.Xml;
+using DpiScale = SharpVectors.Runtime.DpiScale;
 
 namespace FFXIVStaticPlanner.Data
 {
@@ -18,7 +23,18 @@ namespace FFXIVStaticPlanner.Data
             }
             else if ( data is string strData )
             {
-                File.WriteAllText ( fileName , strData );
+                WpfDrawingSettings wpfDrawingSettings = new();
+                wpfDrawingSettings.IncludeRuntime = true;
+                wpfDrawingSettings.TextAsGeometry = false;
+                wpfDrawingSettings.IgnoreRootViewbox = true;
+
+                using var converter = new StreamSvgConverter(wpfDrawingSettings);
+                using XmlReader input = XmlReader.Create(new StringReader(strData), new XmlReaderSettings{ DtdProcessing = DtdProcessing.Parse } );
+                using Stream output = File.Create(fileName);
+
+                converter.Convert ( input , output );
+                output.Flush ( );
+                output.Close ( );
             }
 
             return id;

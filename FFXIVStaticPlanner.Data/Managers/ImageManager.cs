@@ -30,7 +30,7 @@ namespace FFXIVStaticPlanner.Data
             get;
         }
 
-        public Guid AddImage ( byte[] data , string name , string group = DefaultGroup )
+        public Guid AddImage ( object data , string name , string group = DefaultGroup )
         {
             var id = Repository.AddImage(data);
 
