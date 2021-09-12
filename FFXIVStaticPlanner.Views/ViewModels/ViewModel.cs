@@ -1,42 +1,56 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace FFXIVStaticPlanner.ViewModels
 {
-    public abstract class ViewModel: INotifyPropertyChanged
+    /// <summary>
+    /// When inherited into a child class, this provides the basic set of properties, methods and events to handle ViewModel functions
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public abstract class ViewModel<T>: INotifyPropertyChanged where T : Window, new()
     {
-        public Window Window
+        /// <summary>
+        /// Gets the Window that this <see cref="ViewModel{T}"/> handles
+        /// </summary>
+        public T Window
         {
             get;
             private set;
         }
 
-        public ViewModel ( ) => Initialize ( );
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void Initialize ( )
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ViewModel{T}"/> class
+        /// </summary>
+        public ViewModel ( )
         {
-            var type = GetType();
-            var viewName = type.FullName.Replace("Model", "").Replace("ViewModels", "Views");
-
-            if ( Type.GetType(viewName) is Type viewType )
+            Window = new T
             {
-                Window = Activator.CreateInstance ( viewType ) as Window;
-                Window.DataContext = this;
-            }
+                DataContext = this
+            };
         }
 
+        /// <summary>
+        /// Raised whenver the value of a property has changed
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+        
+        /// <summary>
+        /// Shows the view assigned to this view model
+        /// </summary>
         public void Show ( ) => Window?.Show ( );
 
+        /// <summary>
+        /// Opens the view and only returns when the view is closed
+        /// </summary>
+        /// <returns>A <see cref="Nullable{T}"/> value of type <see cref="bool"/> that specifies whether the activity was accepted (<see langword="true"/>) or rejected (<see langword="false"/>).  The return value is <see cref="System.Windows.Window.DialogResult"/> property before a window closes.</returns>
         public bool? ShowDialog ( ) => Window?.ShowDialog ( );
 
+        /// <summary>
+        /// Raises the <see cref="PropertyChanged"/> event
+        /// </summary>
+        /// <param name="propertyName">The name of the property that has changed</param>
         public void RaisePropertyChanged ( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke ( this , new PropertyChangedEventArgs ( propertyName ) );
     }
 }

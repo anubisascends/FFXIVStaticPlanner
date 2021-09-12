@@ -1,24 +1,29 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Ink;
 
 namespace FFXIVStaticPlanner.Data
 {
+
     public class Document : INotifyPropertyChanged
     {
         private string strFileName;
         private StrokeCollection _objStrokes = new();
         private ObservableCollection<ImageIcon> _objImages;
         private bool _bChanged;
+        private ShapeDataCollection _objShapes;
 
         public Document ( )
         {
             _objStrokes = new ( );
             _objImages = new ( );
+            _objShapes = new ( );
 
             _objStrokes.StrokesChanged += onStrokesChanged;
             _objImages.CollectionChanged += onImagesChanged;
+            _objShapes.CollectionChanged += onShapesChanged;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -37,6 +42,8 @@ namespace FFXIVStaticPlanner.Data
 
         public ObservableCollection<ImageIcon> Images => _objImages;
 
+        public ShapeDataCollection Shapes => _objShapes;
+
         public bool HasChanges
         {
             get => _bChanged;
@@ -49,8 +56,10 @@ namespace FFXIVStaticPlanner.Data
 
         private void raisePropertyChanged ( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke ( this , new PropertyChangedEventArgs ( propertyName ) );
 
-        private void onImagesChanged ( object sender , System.Collections.Specialized.NotifyCollectionChangedEventArgs e ) => HasChanges = true;
+        private void onImagesChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
 
         private void onStrokesChanged ( object sender , StrokeCollectionChangedEventArgs e ) => HasChanges = true;
+
+        private void onShapesChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
     }
 }

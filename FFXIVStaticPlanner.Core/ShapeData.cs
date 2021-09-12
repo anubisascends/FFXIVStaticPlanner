@@ -1,27 +1,31 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.Windows;
+using System.Windows.Media;
 
 namespace FFXIVStaticPlanner.Data
 {
-    public class ImageIcon
+    public class ShapeData
     {
-        public string Display
+        public int ShapeType
+        {
+            get; set;
+        }
+
+        public double Left
         {
             get;set;
         }
 
-        public Guid Id
+        public double Top
         {
             get;set;
         }
 
-        public Point Location
+        public double Width
         {
             get;set;
         }
 
-        public Size Scale
+        public double Height
         {
             get;set;
         }
@@ -31,7 +35,7 @@ namespace FFXIVStaticPlanner.Data
             get;set;
         }
 
-        public int Canvas
+        public Color Color
         {
             get;set;
         }

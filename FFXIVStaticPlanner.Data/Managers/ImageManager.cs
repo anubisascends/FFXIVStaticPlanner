@@ -30,7 +30,7 @@ namespace FFXIVStaticPlanner.Data
             get;
         }
 
-        public Guid AddImage ( byte[] data , string name , string group = DefaultGroup )
+        public Guid AddImage ( object data , string name , string group = DefaultGroup )
         {
             var id = Repository.AddImage(data);
 
@@ -70,7 +70,6 @@ namespace FFXIVStaticPlanner.Data
 
         public ImageData GetImage ( Guid id )
         {
-
             var objDoc = XDocument.Load(MetadataFile);
             var images = objDoc.Root.Element(ImagesNode);
             var metadata = images.Elements ( )
@@ -84,7 +83,12 @@ namespace FFXIVStaticPlanner.Data
                 Group = metadata?.Attribute(GroupAttribute)?.Value ?? DefaultGroup
             };
 
-            result.SetRawData ( Repository.GetImage ( id ) );
+            object repoData = Repository.GetImage(id);
+
+            if ( repoData is byte[] byteData )
+            {
+                result.SetRawData ( byteData );
+            }
 
 
             return result;
@@ -108,7 +112,12 @@ namespace FFXIVStaticPlanner.Data
                     Group = item.Attribute ( GroupAttribute )?.Value ?? DefaultGroup
                 };
 
-                imageData.SetRawData ( Repository.GetImage ( id ) );
+                var repoData = Repository.GetImage(id);
+
+                if ( repoData is byte[] byteData )
+                {
+                    imageData.SetRawData ( byteData );
+                }
 
                 result.Add ( imageData );
             }

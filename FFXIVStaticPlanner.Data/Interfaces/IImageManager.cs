@@ -7,7 +7,7 @@ namespace FFXIVStaticPlanner.Data
     {
         ImageData GetImage ( Guid id );
 
-        Guid AddImage ( byte[] data , string name, string group );
+        Guid AddImage ( object data , string name, string group );
 
         void DeleteImage ( Guid id );
 

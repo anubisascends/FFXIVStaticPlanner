@@ -4,9 +4,9 @@ namespace FFXIVStaticPlanner.Data
 {
     public interface IImageRepository
     {
-        byte[] GetImage ( Guid id );
+        object GetImage ( Guid id );
 
-        Guid AddImage ( byte[] data );
+        Guid AddImage ( object data );
 
         void DeleteImage ( Guid id );
     }
