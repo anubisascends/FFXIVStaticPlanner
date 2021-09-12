@@ -1,6 +1,7 @@
 # FFXIVStaticPlanner
 
-##Dependent Software
+## Dependent Software
+
 To compile this project, it is recommended that you have the following softwares installed:
 
 - Visual Studio 2019 or newer
