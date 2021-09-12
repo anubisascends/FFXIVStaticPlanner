@@ -67,7 +67,7 @@ namespace FFXIVStaticPlanner.ViewModels
             Images = new ( );
             ImageManager = ManagerFactory.CreateImageManager ( );
             DocumentManager = ManagerFactory.CreateDocumentManager ( );
-            OnRefreshImages ( null );
+            onRefreshImages ( null );
 
             Window.lbxImages.PreviewMouseDown += onListboxMouseDown;
             Window.lbxImages.PreviewMouseMove += onListboxMouseMove;
@@ -81,7 +81,391 @@ namespace FFXIVStaticPlanner.ViewModels
             Window.bgCanvas.PreviewMouseMove += onBgCanvasMouseMove;
         }
 
-        #region root view handlers
+        private IImageManager ImageManager
+        {
+            get;
+        }
+
+        private IDocumentManager DocumentManager
+        {
+            get;
+        }
+
+        public Cursor Cursor
+        {
+            get => _objCursor ??= Cursors.Arrow;
+            set
+            {
+                _objCursor = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public bool DrawShape
+        {
+            get; set;
+        } = false;
+
+        public string SelectedLayer
+        {
+            get => _strLayer ??= c_strAnnotations;
+            set
+            {
+                _strLayer = value;
+                RaisePropertyChanged ( );
+                setLayer ( );
+            }
+        }
+
+        public string FilterText
+        {
+            get => _strFilter ??= string.Empty;
+            set
+            {
+                _strFilter = value;
+                RaisePropertyChanged ( );
+                updateFilter ( );
+            }
+        }
+
+        public bool EnableAnnotations
+        {
+            get => _bAnnotate;
+            set
+            {
+                _bAnnotate = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public bool EnablePlayers
+        {
+            get => _bPlayer;
+            set
+            {
+                _bPlayer = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public bool EnableBackground
+        {
+            get => _bBG;
+            set
+            {
+                _bBG = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public int ShapeIndex
+        {
+            get; set;
+        } = 1;
+
+        public ImageData SelectedImage
+        {
+            get => _objSelectedImage;
+            set
+            {
+                _objSelectedImage = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public ObservableCollection<ImageData> Images
+        {
+            get;
+        }
+
+        public ICollectionView ImageView
+        {
+            get => _objView;
+            set
+            {
+                _objView = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public Document Document
+        {
+            get;
+            private set;
+        }
+
+        public DrawingAttributes DrawingAttributes
+        {
+            get;
+        }
+
+        public InkCanvasEditingMode EditingMode
+        {
+            get => _eMode;
+            set
+            {
+                _eMode = value;
+                RaisePropertyChanged ( );
+            }
+        }
+
+        public ICommand AddImage => _addImage ??= new CommandHandler ( onAddImage , canAlwaysExecute );
+
+        public ICommand RefreshImages => _refrechImages ??= new CommandHandler ( onRefreshImages , canAlwaysExecute );
+
+        public ICommand DeleteImage => _deleteImage ??= new CommandHandler ( onDeleteImage , canDeleteImage );
+
+        public ICommand SaveDocument => _saveDocument ??= new CommandHandler ( onSaveDocument , canSaveDocument );
+
+        public ICommand ChangeColor => _changeColor ??= new CommandHandler ( onChangeColor , canAlwaysExecute );
+
+        public ICommand ChangeBrushSize => _changeBrushSize ??= new CommandHandler ( onChangeBrushSize , canAlwaysExecute );
+
+        public ICommand ChangeEditMode => _changeEditMode ??= new CommandHandler ( onChangeEditMode , canAlwaysExecute );
+
+        public ICommand Undo => _undo ??= new CommandHandler ( onUndo , canUndo );
+
+        public ICommand Redo => _redo ??= new CommandHandler ( onRedo , canRedo );
+
+        public ICommand ClearFilter => _clearFilter ??= new CommandHandler ( onClearFilter , canClearFilter );
+
+        public ICommand DrawRectangle => _drawRect ??= new CommandHandler ( onDrawRect , canDrawShape );
+
+        public ICommand DrawEllipse => _drawEllip ??= new CommandHandler ( onDrawEllipse , canDrawShape );
+
+        public ICommand OpenDocument => _openDoc ??= new CommandHandler ( onOpenDocument , canAlwaysExecute );
+
+        private void onOpenDocument ( object obj )
+        {
+            var dlgOpen = new OpenFileDialog
+            {
+                Title = "Please select a file to open...",
+                Filter = "Document (*.xml)|*.xml|All Files (*.*)|*.*"
+            };
+
+            if ( dlgOpen.ShowDialog ( ) ?? false )
+            {
+                Document = DocumentManager.LoadDocument ( dlgOpen.FileName );
+                Window.bgCanvas.Children.Clear ( );
+
+                // we have to rebind the strokes since we created a new document
+                // ----------------------------------------------------------
+                var strokeBinding = new Binding
+                {
+                    Source = Document.Strokes
+                };
+                Window.inkCanvas.SetBinding ( InkCanvas.StrokesProperty , strokeBinding );
+                // ----------------------------------------------------------
+
+                // add shapes to the canvas
+                foreach ( var item in Document.Shapes )
+                {
+                    Shape shape = item.ShapeType == 1 
+                        ? new Rectangle() 
+                        : new Ellipse();
+
+                    shape.Fill = new SolidColorBrush ( item.Color );
+                    shape.Stroke = Brushes.Black;
+                    shape.Width = item.Width;
+                    shape.Height = item.Height;
+                    shape.Tag = item.UUID;
+                    shape.PreviewMouseUp += onShapeMouseUp;
+                    shape.PreviewMouseMove += onShapeMouseMove;
+                    shape.PreviewMouseDown += onShapeMouseDown;
+
+                    Window.bgCanvas.Children.Add ( shape );
+
+                    Canvas.SetLeft ( shape , item.Left );
+                    Canvas.SetTop ( shape , item.Top );
+                }
+
+                // add images to the canvas(es)
+                foreach ( var item in Document.Images )
+                {
+                    var image = Images.FirstOrDefault(x => x.ID == item.Id);
+
+                    if ( image != null )
+                    {
+                        Image img = new Image
+                        {
+                            Source = image.Source,
+                            Width = _dImageSize,
+                            Height = _dImageSize,
+                            Tag = item.UUID
+                        };
+
+                        img.PreviewMouseDown += onImageMouseDown;
+                        img.PreviewMouseMove += onImageMouseMove;
+                        img.PreviewMouseUp += onImageMouseUp;
+
+                        switch ( item.Canvas )
+                        {
+                            case 2:
+                                Window.bgCanvas.Children.Add ( img );
+                                break;
+                            default:
+                                Window.playerCanvas.Children.Add ( img );
+                                break;
+                        }
+
+                        Canvas.SetLeft ( img , item.Location.X );
+                        Canvas.SetTop ( img , item.Location.Y );
+                    }
+                }
+
+            }
+        }
+
+        private void onDrawEllipse ( object obj )
+        {
+            ShapeIndex = 2;
+            Cursor = Cursors.Cross;
+            DrawShape = true;
+        }
+
+        private void onDrawRect ( object obj )
+        {
+            ShapeIndex = 1;
+            Cursor = Cursors.Cross;
+            DrawShape = true;
+        }
+
+        private bool canDrawShape ( object obj ) => SelectedLayer == c_strBackground;
+
+        private void onClearFilter ( object obj ) => FilterText = string.Empty;
+
+        private bool canClearFilter ( object obj ) => !string.IsNullOrEmpty ( FilterText );
+
+        private void updateFilter ( ) => _objView.Filter = ( object obj ) =>
+                                       {
+                                           return obj is ImageData objImageData
+                                               ? objImageData.Name.Contains ( FilterText, StringComparison.InvariantCultureIgnoreCase ) 
+                                                    || objImageData.Group.Contains ( FilterText, StringComparison.InvariantCultureIgnoreCase )
+                                               : false;
+                                       };
+
+        private void onRedo ( object obj ) => throw new System.NotImplementedException ( );
+
+        private bool canRedo ( object obj ) => throw new System.NotImplementedException ( );
+
+        private void onUndo ( object obj ) => throw new System.NotImplementedException ( );
+
+        private bool canUndo ( object obj ) => throw new System.NotImplementedException ( );
+
+        private void onChangeEditMode ( object obj )
+        {
+            string strMode = obj.ToString();
+
+            EditingMode = strMode switch
+            {
+                c_strPoint => InkCanvasEditingMode.EraseByPoint,
+                c_strStroke => InkCanvasEditingMode.EraseByStroke,
+                c_strSelect => InkCanvasEditingMode.Select,
+                _ => InkCanvasEditingMode.Ink
+            };
+
+            Cursor = strMode switch
+            {
+                c_strStroke => Cursors.Hand,
+                c_strPoint => Cursors.Hand,
+                _ => Cursors.Arrow
+            };
+        }
+
+        private void onChangeBrushSize ( object obj )
+        {
+            
+        }
+
+        private void onChangeColor ( object obj ) => DrawingAttributes.Color = obj.ToString ( ) switch
+        {
+            "blue" => Colors.Blue,
+            "red" => Colors.Red,
+            "yellow" => Colors.Yellow,
+            "green" => Colors.Green,
+            "gray" => Colors.Gray,
+            _ => Colors.Black
+        };
+
+        private bool canSaveDocument ( object obj ) => Document?.HasChanges ?? false;
+
+        private void onSaveDocument ( object obj )
+        {
+            string strFileName = string.Empty;
+
+            if ( string.IsNullOrEmpty ( strFileName = Document.FileName ) )
+            {
+                var savDlg = new SaveFileDialog
+                {
+                    Title = "Please select a place to save this document to...",
+                    Filter = "Document File (*.xml)|*.xml",
+                    AddExtension = true,
+                    ValidateNames = true
+                };
+
+                if ( savDlg.ShowDialog ( ) ?? false )
+                {
+                    strFileName = savDlg.FileName;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            DocumentManager.SaveDocument ( strFileName , Document );
+        }
+
+        private bool canAlwaysExecute ( object parameter ) => true;
+
+        private void onAddImage ( object parameter )
+        {
+            var dlgView = new OpenFileDialog
+            {
+                Filter = "Image Files|*.png|All Files|*.*",
+                Title = "Please select the image(s) you want to add...",
+                Multiselect = true
+            };
+
+            if ( dlgView.ShowDialog ( ) ?? false )
+            {
+                foreach ( var item in dlgView.FileNames )
+                {
+                    var raw  = File.ReadAllBytes(item);
+                    var name = Path.GetFileNameWithoutExtension(item);
+                    ImageManager.AddImage ( raw , name , name );
+                }
+            }
+
+            onRefreshImages ( null );
+        }
+
+        private void onRefreshImages ( object parameter )
+        {
+            Images.Clear ( );
+
+            foreach ( var item in ImageManager.GetAllImages ( ) )
+            {
+                Images.Add ( item );
+            }
+
+            _objView = CollectionViewSource.GetDefaultView ( Images );
+        }
+
+        private bool canDeleteImage ( object parameter ) => _objSelectedImage != null;
+
+        private void onDeleteImage ( object parameter )
+        {
+            var result = MessageBox.Show ( $"Are you sure you want to remove {_objSelectedImage.Name}?  This cannot be undone!" ,
+                "Confirm Delete" , MessageBoxButton.YesNo , MessageBoxImage.Warning );
+
+            if ( result == MessageBoxResult.Yes )
+            {
+                ImageManager.DeleteImage ( _objSelectedImage.ID );
+                Images.Remove ( _objSelectedImage );
+
+            }
+        }
 
         private void onListboxMouseDown ( object sender , MouseButtonEventArgs e )
         {
@@ -209,6 +593,7 @@ namespace FFXIVStaticPlanner.ViewModels
             if ( parent.Cursor.Equals ( Cursors.Hand ) )
             {
                 parent.Children.Remove ( _objCurrentImage );
+                Document.Images.Remove ( x => x.UUID.Equals ( _objCurrentImage.Tag ) );
             }
             else
             {
@@ -375,407 +760,14 @@ namespace FFXIVStaticPlanner.ViewModels
 
             if ( Cursor.Equals ( Cursors.Hand ) )
             {
-                var shapedata = Document.Shapes.FirstOrDefault( x => _shape.Tag?.Equals(x.UUID)?? false);
-
-                if ( shapedata != null )
-                {
-                    Document.Shapes.Remove ( shapedata );
-                    Window.bgCanvas.Children.Remove ( _shape );
-                    _shape = null;
-                }
+                Window.bgCanvas.Children.Remove ( _shape );
+                _shape = null;
+                Document.Shapes.Remove ( x => _shape.Tag?.Equals ( x.UUID ) ?? false );
 
                 return;
             }
 
             _bShapeMove = true;
-        }
-
-        #endregion
-
-        private IImageManager ImageManager
-        {
-            get;
-        }
-
-        private IDocumentManager DocumentManager
-        {
-            get;
-        }
-
-        public Cursor Cursor
-        {
-            get => _objCursor ??= Cursors.Arrow;
-            set
-            {
-                _objCursor = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public bool DrawShape
-        {
-            get; set;
-        } = false;
-
-        public string SelectedLayer
-        {
-            get => _strLayer ??= c_strAnnotations;
-            set
-            {
-                _strLayer = value;
-                RaisePropertyChanged ( );
-                setLayer ( );
-            }
-        }
-
-        public string FilterText
-        {
-            get => _strFilter ??= string.Empty;
-            set
-            {
-                _strFilter = value;
-                RaisePropertyChanged ( );
-                updateFilter ( );
-            }
-        }
-
-        public bool EnableAnnotations
-        {
-            get => _bAnnotate;
-            set
-            {
-                _bAnnotate = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public bool EnablePlayers
-        {
-            get => _bPlayer;
-            set
-            {
-                _bPlayer = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public bool EnableBackground
-        {
-            get => _bBG;
-            set
-            {
-                _bBG = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public int ShapeIndex
-        {
-            get; set;
-        } = 1;
-
-        public ImageData SelectedImage
-        {
-            get => _objSelectedImage;
-            set
-            {
-                _objSelectedImage = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public ObservableCollection<ImageData> Images
-        {
-            get;
-        }
-
-        public ICollectionView ImageView
-        {
-            get => _objView;
-            set
-            {
-                _objView = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public Document Document
-        {
-            get;
-            private set;
-        }
-
-        public DrawingAttributes DrawingAttributes
-        {
-            get;
-        }
-
-        public InkCanvasEditingMode EditingMode
-        {
-            get => _eMode;
-            set
-            {
-                _eMode = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public ICommand AddImage => _addImage ??= new CommandHandler ( OnAddImage , CanAlwaysExecute );
-
-        public ICommand RefreshImages => _refrechImages ??= new CommandHandler ( OnRefreshImages , CanAlwaysExecute );
-
-        public ICommand DeleteImage => _deleteImage ??= new CommandHandler ( OnDeleteImage , CanDeleteImage );
-
-        public ICommand SaveDocument => _saveDocument ??= new CommandHandler ( OnSaveDocument , CanSaveDocument );
-
-        public ICommand ChangeColor => _changeColor ??= new CommandHandler ( OnChangeColor , CanAlwaysExecute );
-
-        public ICommand ChangeBrushSize => _changeBrushSize ??= new CommandHandler ( onChangeBrushSize , CanAlwaysExecute );
-
-        public ICommand ChangeEditMode => _changeEditMode ??= new CommandHandler ( onChangeEditMode , CanAlwaysExecute );
-
-        public ICommand Undo => _undo ??= new CommandHandler ( onUndo , canUndo );
-
-        public ICommand Redo => _redo ??= new CommandHandler ( onRedo , canRedo );
-
-        public ICommand ClearFilter => _clearFilter ??= new CommandHandler ( onClearFilter , canClearFilter );
-
-        public ICommand DrawRectangle => _drawRect ??= new CommandHandler ( onDrawRect , canDrawShape );
-
-        public ICommand DrawEllipse => _drawEllip ??= new CommandHandler ( onDrawEllipse , canDrawShape );
-
-        public ICommand OpenDocument => _openDoc ??= new CommandHandler ( onOpenDocument , CanAlwaysExecute );
-
-        private void onOpenDocument ( object obj )
-        {
-            var dlgOpen = new OpenFileDialog
-            {
-                Title = "Please select a file to open...",
-                Filter = "Document (*.xml)|*.xml|All Files (*.*)|*.*"
-            };
-
-            if ( dlgOpen.ShowDialog ( ) ?? false )
-            {
-                Document = DocumentManager.LoadDocument ( dlgOpen.FileName );
-                Window.bgCanvas.Children.Clear ( );
-
-                // we have to rebind the strokes since we created a new document
-                // ----------------------------------------------------------
-                var strokeBinding = new Binding
-                {
-                    Source = Document.Strokes
-                };
-                Window.inkCanvas.SetBinding ( InkCanvas.StrokesProperty , strokeBinding );
-                // ----------------------------------------------------------
-
-                // add shapes to the canvas
-                foreach ( var item in Document.Shapes )
-                {
-                    Shape shape = item.ShapeType == 1 
-                        ? new Rectangle() 
-                        : new Ellipse();
-
-                    shape.Fill = new SolidColorBrush ( item.Color );
-                    shape.Stroke = Brushes.Black;
-                    shape.Width = item.Width;
-                    shape.Height = item.Height;
-                    shape.Tag = item.UUID;
-                    shape.PreviewMouseUp += onShapeMouseUp;
-                    shape.PreviewMouseMove += onShapeMouseMove;
-                    shape.PreviewMouseDown += onShapeMouseDown;
-
-                    Window.bgCanvas.Children.Add ( shape );
-
-                    Canvas.SetLeft ( shape , item.Left );
-                    Canvas.SetTop ( shape , item.Top );
-                }
-
-                // add images to the canvas(es)
-                foreach ( var item in Document.Images )
-                {
-                    var image = Images.FirstOrDefault(x => x.ID == item.Id);
-
-                    if ( image != null )
-                    {
-                        Image img = new Image
-                        {
-                            Source = image.Source,
-                            Width = _dImageSize,
-                            Height = _dImageSize,
-                            Tag = item.UUID
-                        };
-
-                        img.PreviewMouseDown += onImageMouseDown;
-                        img.PreviewMouseMove += onImageMouseMove;
-                        img.PreviewMouseUp += onImageMouseUp;
-
-                        switch ( item.Canvas )
-                        {
-                            case 2:
-                                Window.bgCanvas.Children.Add ( img );
-                                break;
-                            default:
-                                Window.playerCanvas.Children.Add ( img );
-                                break;
-                        }
-
-                        Canvas.SetLeft ( img , item.Location.X );
-                        Canvas.SetTop ( img , item.Location.Y );
-                    }
-                }
-
-            }
-        }
-
-        private void onDrawEllipse ( object obj )
-        {
-            ShapeIndex = 2;
-            Cursor = Cursors.Cross;
-            DrawShape = true;
-        }
-
-        private void onDrawRect ( object obj )
-        {
-            ShapeIndex = 1;
-            Cursor = Cursors.Cross;
-            DrawShape = true;
-        }
-
-        private bool canDrawShape ( object obj ) => SelectedLayer == c_strBackground;
-
-        private void onClearFilter ( object obj ) => FilterText = string.Empty;
-
-        private bool canClearFilter ( object obj ) => !string.IsNullOrEmpty ( FilterText );
-
-        private void updateFilter ( ) => _objView.Filter = ( object obj ) =>
-                                       {
-                                           return obj is ImageData objImageData
-                                               ? objImageData.Name.Contains ( FilterText, StringComparison.InvariantCultureIgnoreCase ) 
-                                                    || objImageData.Group.Contains ( FilterText, StringComparison.InvariantCultureIgnoreCase )
-                                               : false;
-                                       };
-
-        private void onRedo ( object obj ) => throw new System.NotImplementedException ( );
-
-        private bool canRedo ( object obj ) => throw new System.NotImplementedException ( );
-
-        private void onUndo ( object obj ) => throw new System.NotImplementedException ( );
-
-        private bool canUndo ( object obj ) => throw new System.NotImplementedException ( );
-
-        private void onChangeEditMode ( object obj )
-        {
-            string strMode = obj.ToString();
-
-            EditingMode = strMode switch
-            {
-                c_strPoint => InkCanvasEditingMode.EraseByPoint,
-                c_strStroke => InkCanvasEditingMode.EraseByStroke,
-                c_strSelect => InkCanvasEditingMode.Select,
-                _ => InkCanvasEditingMode.Ink
-            };
-
-            Cursor = strMode switch
-            {
-                c_strStroke => Cursors.Hand,
-                c_strPoint => Cursors.Hand,
-                _ => Cursors.Arrow
-            };
-        }
-
-        private void onChangeBrushSize ( object obj )
-        {
-            
-        }
-
-        private void OnChangeColor ( object obj ) => DrawingAttributes.Color = obj.ToString ( ) switch
-        {
-            "blue" => Colors.Blue,
-            "red" => Colors.Red,
-            "yellow" => Colors.Yellow,
-            "green" => Colors.Green,
-            "gray" => Colors.Gray,
-            _ => Colors.Black
-        };
-
-        private bool CanSaveDocument ( object obj ) => Document?.HasChanges ?? false;
-
-        private void OnSaveDocument ( object obj )
-        {
-            string strFileName = string.Empty;
-
-            if ( string.IsNullOrEmpty ( strFileName = Document.FileName ) )
-            {
-                var savDlg = new SaveFileDialog
-                {
-                    Title = "Please select a place to save this document to...",
-                    Filter = "Document File (*.xml)|*.xml",
-                    AddExtension = true,
-                    ValidateNames = true
-                };
-
-                if ( savDlg.ShowDialog ( ) ?? false )
-                {
-                    strFileName = savDlg.FileName;
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            DocumentManager.SaveDocument ( strFileName , Document );
-        }
-
-        private static bool CanAlwaysExecute ( object parameter ) => true;
-
-        private void OnAddImage ( object parameter )
-        {
-            var dlgView = new OpenFileDialog
-            {
-                Filter = "Image Files|*.png|All Files|*.*",
-                Title = "Please select the image(s) you want to add...",
-                Multiselect = true
-            };
-
-            if ( dlgView.ShowDialog ( ) ?? false )
-            {
-                foreach ( var item in dlgView.FileNames )
-                {
-                    var raw  = File.ReadAllBytes(item);
-                    var name = Path.GetFileNameWithoutExtension(item);
-                    ImageManager.AddImage ( raw , name , name );
-                }
-            }
-
-            OnRefreshImages ( null );
-        }
-
-        private void OnRefreshImages ( object parameter )
-        {
-            Images.Clear ( );
-
-            foreach ( var item in ImageManager.GetAllImages ( ) )
-            {
-                Images.Add ( item );
-            }
-
-            _objView = CollectionViewSource.GetDefaultView ( Images );
-        }
-
-        private bool CanDeleteImage ( object parameter ) => _objSelectedImage != null;
-
-        private void OnDeleteImage ( object parameter )
-        {
-            var result = MessageBox.Show ( $"Are you sure you want to remove {_objSelectedImage.Name}?  This cannot be undone!" ,
-                "Confirm Delete" , MessageBoxButton.YesNo , MessageBoxImage.Warning );
-
-            if ( result == MessageBoxResult.Yes )
-            {
-                ImageManager.DeleteImage ( _objSelectedImage.ID );
-                Images.Remove ( _objSelectedImage );
-
-            }
         }
 
         private void setLayer ( )

@@ -7,12 +7,19 @@ namespace FFXIVStaticPlanner.Data
     {
         const string StorageFolder = ".\\Images\\";
 
-        public Guid AddImage ( byte[] data )
+        public Guid AddImage ( object data )
         {
             var id = Guid.NewGuid();
             var fileName = getFileName(id);
 
-            File.WriteAllBytes ( fileName , data );
+            if ( data is byte[] byteData )
+            {
+                File.WriteAllBytes ( fileName , byteData );
+            }
+            else if ( data is string strData )
+            {
+                File.WriteAllText ( fileName , strData );
+            }
 
             return id;
         }
@@ -27,7 +34,7 @@ namespace FFXIVStaticPlanner.Data
             }
         }
 
-        public byte[] GetImage ( Guid id )
+        public object GetImage ( Guid id )
         {
             var filename = getFileName(id);
 
