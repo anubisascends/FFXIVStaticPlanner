@@ -25,7 +25,6 @@
             <RibbonTab Header="Home">
                 <RibbonGroup Header="Document">
                     <RibbonButton Label="New" LargeImageSource="/FFXIVStaticPlanner.Views;component/Images/document_32xLG.png"/>
-                    <RibbonButton Label="Wipe"/>
                 </RibbonGroup>
                 <RibbonGroup Header="Edit">
                     <RibbonRadioButton Label="Draw" Command="{Binding ChangeEditMode}" CommandParameter="draw" LargeImageSource="/FFXIVStaticPlanner.Views;component/Images/Pen4_48x.png" IsChecked="True"/>
@@ -41,6 +40,42 @@
                             </RibbonGalleryCategory>
                         </RibbonGallery>
                     </RibbonComboBox>
+                    <RibbonButton Label="Draw Rectangle" Command="{Binding DrawRectangle}">
+                        <RibbonButton.SmallImageSource>
+                            <DrawingImage>
+                                <DrawingImage.Drawing>
+                                    <GeometryDrawing>
+                                        <GeometryDrawing.Brush>
+                                            <SolidColorBrush Color="Red"/>
+                                        </GeometryDrawing.Brush>
+                                        <GeometryDrawing.Geometry>
+                                            <RectangleGeometry>
+                                                <RectangleGeometry.Rect>
+                                                    <Rect Width="50" Height="50"/>
+                                                </RectangleGeometry.Rect>
+                                            </RectangleGeometry>
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                </DrawingImage.Drawing>
+                            </DrawingImage>
+                        </RibbonButton.SmallImageSource>
+                    </RibbonButton>
+                    <RibbonButton Label="Draw Ellipse" Command="{Binding DrawEllipse}">
+                        <RibbonButton.SmallImageSource>
+                            <DrawingImage>
+                                <DrawingImage.Drawing>
+                                    <GeometryDrawing>
+                                        <GeometryDrawing.Brush>
+                                            <SolidColorBrush Color="Red"/>
+                                        </GeometryDrawing.Brush>
+                                        <GeometryDrawing.Geometry>
+                                            <EllipseGeometry Center="50,50" RadiusX="50" RadiusY="50"/>
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                </DrawingImage.Drawing>
+                            </DrawingImage>
+                        </RibbonButton.SmallImageSource>
+                    </RibbonButton>
                 </RibbonGroup>
                 <RibbonGroup Header="Drawing Colors">
                     <RibbonRadioButton Label="Black" Command="{Binding ChangeColor}" CommandParameter="black" IsChecked="True">
@@ -133,6 +168,24 @@
                             </DrawingImage>
                         </RibbonRadioButton.LargeImageSource>
                     </RibbonRadioButton>
+                    <RibbonRadioButton Label="Gray" Command="{Binding ChangeColor}" CommandParameter="gray">
+                        <RibbonRadioButton.LargeImageSource>
+                            <DrawingImage>
+                                <DrawingImage.Drawing>
+                                    <GeometryDrawing>
+                                        <GeometryDrawing.Geometry>
+                                            <GeometryGroup>
+                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
+                                            </GeometryGroup>
+                                        </GeometryDrawing.Geometry>
+                                        <GeometryDrawing.Brush>
+                                            <SolidColorBrush Color="Gray"/>
+                                        </GeometryDrawing.Brush>
+                                    </GeometryDrawing>
+                                </DrawingImage.Drawing>
+                            </DrawingImage>
+                        </RibbonRadioButton.LargeImageSource>
+                    </RibbonRadioButton>
                 </RibbonGroup>
             </RibbonTab>
             <RibbonTab Header="Images">
@@ -204,7 +257,9 @@
             <GridSplitter Width="5"/>
 
             <Canvas Grid.Column="1" x:Name="bgCanvas" IsHitTestVisible="{Binding EnableBackground}" Drop="onCanvasDrop" AllowDrop="True" 
-                    Background="Transparent" Cursor="{Binding Cursor}"/>
+                    Background="Transparent" Cursor="{Binding Cursor}"
+                    PreviewMouseDown="onBgCanvasMouseDown"
+                    PreviewMouseMove="bgCanvas_PreviewMouseMove"/>
             <Canvas Grid.Column="1" x:Name="playerCanvas" IsHitTestVisible="{Binding EnablePlayers}" Drop="onCanvasDrop" AllowDrop="True" 
                     Background="Transparent" Cursor="{Binding Cursor}"/>
             <InkCanvas Grid.Column="1" Strokes="{Binding Document.Strokes}" DefaultDrawingAttributes="{Binding DrawingAttributes}"

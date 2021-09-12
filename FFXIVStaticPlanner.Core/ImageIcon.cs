@@ -25,5 +25,10 @@ namespace FFXIVStaticPlanner.Data
         {
             get;set;
         }
+
+        public Guid UUID
+        {
+            get;set;
+        }
     }
 }

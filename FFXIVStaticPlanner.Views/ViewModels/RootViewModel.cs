@@ -19,6 +19,9 @@ namespace FFXIVStaticPlanner.ViewModels
         private const string c_strAnnotations = "Annotations";
         private const string c_strBackground = "Background";
         private const string c_strPlayers = "Players";
+        private const string c_strPoint = "point";
+        private const string c_strStroke = "stroke";
+        private const string c_strSelect = "select";
 
         private ImageData _objSelectedImage;
         private ICommand _addImage;
@@ -39,6 +42,8 @@ namespace FFXIVStaticPlanner.ViewModels
         private ICollectionView _objView;
         private string _strLayer;
         private Cursor _objCursor;
+        private ICommand _drawRect;
+        private ICommand _drawEllip;
 
         public RootViewModel ( ) : base ( )
         {
@@ -70,6 +75,11 @@ namespace FFXIVStaticPlanner.ViewModels
                 RaisePropertyChanged ( );
             }
         }
+
+        public bool DrawShape
+        {
+            get; set;
+        } = false;
 
         public string SelectedLayer
         {
@@ -122,6 +132,11 @@ namespace FFXIVStaticPlanner.ViewModels
                 RaisePropertyChanged ( );
             }
         }
+
+        public int ShapeIndex
+        {
+            get; set;
+        } = 1;
 
         public ImageData SelectedImage
         {
@@ -189,6 +204,26 @@ namespace FFXIVStaticPlanner.ViewModels
 
         public ICommand ClearFilter => _clearFilter ??= new CommandHandler ( onClearFilter , canClearFilter );
 
+        public ICommand DrawRectangle => _drawRect ??= new CommandHandler ( onDrawRect , canDrawShape );
+
+        public ICommand DrawEllipse => _drawEllip ??= new CommandHandler ( onDrawEllipse , canDrawShape );
+
+        private void onDrawEllipse ( object obj )
+        {
+            ShapeIndex = 2;
+            Cursor = Cursors.Cross;
+            DrawShape = true;
+        }
+
+        private void onDrawRect ( object obj )
+        {
+            ShapeIndex = 1;
+            Cursor = Cursors.Cross;
+            DrawShape = true;
+        }
+
+        private bool canDrawShape ( object obj ) => SelectedLayer == c_strBackground;
+
         private void onClearFilter ( object obj ) => FilterText = string.Empty;
 
         private bool canClearFilter ( object obj ) => !string.IsNullOrEmpty ( FilterText );
@@ -215,16 +250,16 @@ namespace FFXIVStaticPlanner.ViewModels
 
             EditingMode = strMode switch
             {
-                "point" => InkCanvasEditingMode.EraseByPoint,
-                "stroke" => InkCanvasEditingMode.EraseByStroke,
-                "select" => InkCanvasEditingMode.Select,
+                c_strPoint => InkCanvasEditingMode.EraseByPoint,
+                c_strStroke => InkCanvasEditingMode.EraseByStroke,
+                c_strSelect => InkCanvasEditingMode.Select,
                 _ => InkCanvasEditingMode.Ink
             };
 
             Cursor = strMode switch
             {
-                "stroke" => Cursors.Hand,
-                "point" => Cursors.Hand,
+                c_strStroke => Cursors.Hand,
+                c_strPoint => Cursors.Hand,
                 _ => Cursors.Arrow
             };
         }
@@ -240,6 +275,7 @@ namespace FFXIVStaticPlanner.ViewModels
             "red" => Colors.Red,
             "yellow" => Colors.Yellow,
             "green" => Colors.Green,
+            "gray" => Colors.Gray,
             _ => Colors.Black
         };
 
@@ -247,7 +283,29 @@ namespace FFXIVStaticPlanner.ViewModels
 
         private void OnSaveDocument ( object obj )
         {
-            MessageBox.Show ( "Not Implemented" );
+            string strFileName = string.Empty;
+
+            if ( string.IsNullOrEmpty ( strFileName = Document.FileName ) )
+            {
+                var savDlg = new SaveFileDialog
+                {
+                    Title = "Please select a place to save this document to...",
+                    Filter = "Document File (*.xml)|*.xml",
+                    AddExtension = true,
+                    ValidateNames = true
+                };
+
+                if ( savDlg.ShowDialog ( ) ?? false )
+                {
+                    strFileName = savDlg.FileName;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            DocumentManager.SaveDocument ( strFileName , Document );
         }
 
         private static bool CanAlwaysExecute ( object parameter ) => true;
