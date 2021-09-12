@@ -1,39 +1,95 @@
 ﻿using System;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Xml.Linq;
 
 namespace FFXIVStaticPlanner.Data
 {
     internal class DocumentManager : IDocumentManager
     {
-        const string StrokesElement = "Strokes";
-        const string StrokeElement = "Stroke";
-        const string ImagesElement = "Images";
-        const string ImageElement = "Image";
-        const string ShapesElement = "Shapes";
-        const string ShapeElement = "Shape";
-        const string RootElement = "Document";
-        const string StylusPointsElement = "StylusPoints";
-        const string DescriptionElement = "Description";
-        const string PropertyElement = "Property";
+        private const string StrokesElement = "Strokes";
+        private const string StrokeElement = "Stroke";
+        private const string ImagesElement = "Images";
+        private const string ImageElement = "Image";
+        private const string ShapesElement = "Shapes";
+        private const string ShapeElement = "Shape";
+        private const string RootElement = "Document";
+        private const string StylusPointsElement = "StylusPoints";
 
-        const string XAttribute = "x";
-        const string YAttribute = "Y";
-        const string PressureAttributre = "pressurefactor";
-        const string DisplayAttribute = "display";
-        const string IDAttribute = "id";
-        const string ScaleAttribute = "scale";
-        const string UUIDAttribute = "uuid";
-        const string IsButtonAttribute = "isButton";
-        const string MaxAttribute = "maximum";
-        const string ResolutionAttribute = "resolution";
-        const string MinAttribute = "minimum";
-        const string UnitAttribute = "unit";
-        const string TypeAttribute = "type";
-        const string WidthAttribute = "width";
-        const string HeightAttribute = "height";
+        private const string XAttribute = "x";
+        private const string YAttribute = "y";
+        private const string PressureAttributre = "pressurefactor";
+        private const string DisplayAttribute = "display";
+        private const string IDAttribute = "id";
+        private const string ScaleAttribute = "scale";
+        private const string UUIDAttribute = "uuid";
+        private const string TypeAttribute = "type";
+        private const string WidthAttribute = "width";
+        private const string HeightAttribute = "height";
+        private const string CanvasAttribute = "canvas";
+        private const string ColorAttribute = "color";
 
+        public Document LoadDocument ( string filename )
+        {
+            var result = new Document();
+            var document = XDocument.Load(filename);
 
-        public Document LoadDocument ( string filename ) => throw new NotImplementedException ( );
+            // add strokes
+            foreach ( var strokeElem in document.Root.Element ( StrokesElement ).Elements ( ) )
+            {
+                var points = new StylusPointCollection();
+
+                foreach ( var pointElem in strokeElem.Elements ( StylusPointsElement ) )
+                {
+                    var point = new StylusPoint(
+                        double.Parse(pointElem.Attribute(XAttribute)?.Value ?? "0"),
+                        double.Parse(pointElem.Attribute(YAttribute)?.Value ?? "0"),
+                        float.Parse(pointElem.Attribute(PressureAttributre)?.Value ?? "0"));
+
+                    points.Add ( point );
+
+                }
+
+                result.Strokes.Add ( new Stroke ( points , new DrawingAttributes { Color = ( Color )ColorConverter.ConvertFromString ( strokeElem.Attribute ( ColorAttribute ).Value ?? "#FFFFFF" ) } ) );
+            }
+
+            // add images
+            foreach ( var imageElem in document.Root.Element ( ImagesElement ).Elements ( ) )
+            {
+                result.Images.Add ( new ImageIcon
+                {
+                    Display = imageElem.Attribute ( DisplayAttribute )?.Value ?? string.Empty ,
+                    Id = Guid.Parse ( imageElem.Attribute ( IDAttribute )?.Value ?? Guid.Empty.ToString ( ) ) ,
+                    Location = new System.Windows.Point
+                        (
+                            double.Parse ( imageElem.Attribute ( XAttribute )?.Value ?? "0" ) ,
+                            double.Parse ( imageElem.Attribute ( YAttribute )?.Value ?? "0" )
+                        ) ,
+                    UUID = Guid.Parse ( imageElem.Attribute ( UUIDAttribute )?.Value ?? Guid.Empty.ToString ( ) ) ,
+                    Canvas = int.Parse ( imageElem.Attribute ( CanvasAttribute )?.Value ?? "1" )
+                } );
+            }
+
+            // add shapes
+            foreach ( var shapeElem in document.Root.Element ( ShapesElement ).Elements ( ) )
+            {
+                result.Shapes.Add ( new ShapeData
+                {
+                    ShapeType = int.Parse ( shapeElem.Attribute ( TypeAttribute )?.Value ?? "1" ) ,
+                    Color = ( Color )ColorConverter.ConvertFromString ( shapeElem.Attribute ( ColorAttribute )?.Value ?? "#FFFFFF" ) ,
+                    Height = double.Parse ( shapeElem.Attribute ( HeightAttribute )?.Value ?? "0" ) ,
+                    Width = double.Parse ( shapeElem.Attribute ( WidthAttribute )?.Value ?? "0" ) ,
+                    Left = double.Parse ( shapeElem.Attribute ( XAttribute )?.Value ?? "0" ) ,
+                    Top = double.Parse ( shapeElem.Attribute ( YAttribute )?.Value ?? "0" ) ,
+                    UUID = Guid.Parse ( shapeElem.Attribute ( UUIDAttribute )?.Value ?? Guid.Empty.ToString ( ) )
+                } );
+            }
+
+            result.FileName = filename;
+
+            return result;
+        }
 
         public void SaveDocument ( string filename , Document document )
         {
@@ -51,26 +107,14 @@ namespace FFXIVStaticPlanner.Data
             foreach ( var stroke in document.Strokes )
             {
                 var strokeElem = new XElement(StrokeElement,
-                    new XAttribute("color", stroke.DrawingAttributes.Color));
+                    new XAttribute(ColorAttribute, stroke.DrawingAttributes.Color));
 
                 foreach ( var point in stroke.StylusPoints )
                 {
                     var pointsElem = new XElement(StylusPointsElement,
                         new XAttribute(XAttribute, point.X),
                         new XAttribute(YAttribute, point.Y),
-                        new XElement(DescriptionElement, point.Description),
                         new XAttribute(PressureAttributre, point.PressureFactor));
-
-                    foreach ( var property in point.Description.GetStylusPointProperties ( ) )
-                    {
-                        pointsElem.Add ( new XElement ( PropertyElement ,
-                            new XAttribute ( IDAttribute , property.Id ) ,
-                            new XAttribute ( IsButtonAttribute , property.IsButton ) ,
-                            new XAttribute ( MaxAttribute , property.Maximum ) ,
-                            new XAttribute ( MinAttribute , property.Minimum ) ,
-                            new XAttribute ( ResolutionAttribute , property.Resolution ) ,
-                            new XAttribute ( UnitAttribute , property.Unit ) ) );
-                    }
 
                     strokeElem.Add ( pointsElem );
                 }
@@ -87,7 +131,8 @@ namespace FFXIVStaticPlanner.Data
                     new XAttribute ( XAttribute , image.Location.X ) ,
                     new XAttribute ( YAttribute , image.Location.Y ) ,
                     new XAttribute ( ScaleAttribute , image.Scale ) ,
-                    new XAttribute ( UUIDAttribute , image.UUID ) ) );
+                    new XAttribute ( UUIDAttribute , image.UUID ) ,
+                    new XAttribute ( CanvasAttribute , image.Canvas ) ) );
             }
 
             // add shapes
@@ -99,7 +144,8 @@ namespace FFXIVStaticPlanner.Data
                     new XAttribute ( WidthAttribute , shape.Width ) ,
                     new XAttribute ( HeightAttribute , shape.Height ) ,
                     new XAttribute ( XAttribute , shape.Left ) ,
-                    new XAttribute ( YAttribute , shape.Top ) ) );
+                    new XAttribute ( YAttribute , shape.Top ) ,
+                    new XAttribute ( ColorAttribute , shape.Color ) ) );
             }
 
             xml.Save ( filename );

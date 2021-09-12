@@ -30,5 +30,10 @@ namespace FFXIVStaticPlanner.Data
         {
             get;set;
         }
+
+        public int Canvas
+        {
+            get;set;
+        }
     }
 }

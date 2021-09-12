@@ -14,6 +14,7 @@
     <None Remove="VIews\DeleteHS.png" />
     <None Remove="VIews\document_32xLG.png" />
     <None Remove="VIews\EraseTool_203.png" />
+    <None Remove="VIews\folder_Open_16xLG.png" />
     <None Remove="VIews\image.png" />
     <None Remove="VIews\Pen4_48x.png" />
     <None Remove="VIews\save_16xLG.png" />
@@ -35,6 +36,7 @@
     <Resource Include="Images\EraseTool_203.png" />
     <Resource Include="Images\Arrow_RedoRetry_16xLG_color.png" />
     <Resource Include="Images\Arrow_UndoRevertRestore_16xLG_color.png" />
+    <Resource Include="Images\folder_Open_16xLG.png" />
   </ItemGroup>
 
 </Project>

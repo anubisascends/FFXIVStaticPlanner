@@ -3,7 +3,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Ink;
-using System.Windows.Shapes;
 
 namespace FFXIVStaticPlanner.Data
 {
@@ -14,7 +13,7 @@ namespace FFXIVStaticPlanner.Data
         private StrokeCollection _objStrokes = new();
         private ObservableCollection<ImageIcon> _objImages;
         private bool _bChanged;
-        private ObservableCollection<ShapeData> _objShapes;
+        private ShapeDataCollection _objShapes;
 
         public Document ( )
         {
@@ -26,7 +25,6 @@ namespace FFXIVStaticPlanner.Data
             _objImages.CollectionChanged += onImagesChanged;
             _objShapes.CollectionChanged += onShapesChanged;
         }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -44,7 +42,7 @@ namespace FFXIVStaticPlanner.Data
 
         public ObservableCollection<ImageIcon> Images => _objImages;
 
-        public ObservableCollection<ShapeData> Shapes => _objShapes;
+        public ShapeDataCollection Shapes => _objShapes;
 
         public bool HasChanges
         {
