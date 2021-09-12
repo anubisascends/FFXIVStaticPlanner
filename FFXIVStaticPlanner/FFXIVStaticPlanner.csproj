@@ -12,4 +12,8 @@
     <ProjectReference Include="..\FFXIVStaticPlanner.Views\FFXIVStaticPlanner.Views.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if exist $(SolutionDir)$(ConfigurationName).iss &quot;$(ISCompiler)&quot; &quot;$(SolutionDir)$(ConfigurationName).iss&quot;" />
+  </Target>
+
 </Project>
