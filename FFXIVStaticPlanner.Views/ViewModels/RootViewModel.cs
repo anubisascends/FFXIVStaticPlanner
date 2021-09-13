@@ -58,6 +58,7 @@ namespace FFXIVStaticPlanner.ViewModels
         private bool _bShapeMove;
         private double _dImageSize = 96;
         private Layers _eLayer = Layers.Annotations;
+        private ICommand _newDoc;
 
         public RootViewModel ( ) 
         {
@@ -79,6 +80,8 @@ namespace FFXIVStaticPlanner.ViewModels
 
             Window.bgCanvas.PreviewMouseDown += onBgCanvasMouseDown;
             Window.bgCanvas.PreviewMouseMove += onBgCanvasMouseMove;
+
+            Window.Closing += onWindowClose;
         }
 
         private IImageManager ImageManager
@@ -124,36 +127,6 @@ namespace FFXIVStaticPlanner.ViewModels
                 _strFilter = value;
                 RaisePropertyChanged ( );
                 updateFilter ( );
-            }
-        }
-
-        public bool EnableAnnotations
-        {
-            get => _bAnnotate;
-            set
-            {
-                _bAnnotate = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public bool EnablePlayers
-        {
-            get => _bPlayer;
-            set
-            {
-                _bPlayer = value;
-                RaisePropertyChanged ( );
-            }
-        }
-
-        public bool EnableBackground
-        {
-            get => _bBG;
-            set
-            {
-                _bBG = value;
-                RaisePropertyChanged ( );
             }
         }
 
@@ -233,6 +206,17 @@ namespace FFXIVStaticPlanner.ViewModels
         public ICommand DrawEllipse => _drawEllip ??= new CommandHandler ( onDrawEllipse , canDrawShape );
 
         public ICommand OpenDocument => _openDoc ??= new CommandHandler ( onOpenDocument , canAlwaysExecute );
+
+        public ICommand NewDocument => _newDoc ??= new CommandHandler ( onNewDocument , canNewDocument );
+
+        private void onNewDocument ( object obj )
+        {
+            Document.Clear ( );
+            Window.bgCanvas.Children.Clear ( );
+            Window.playerCanvas.Children.Clear ( );
+        }
+
+        private bool canNewDocument ( object obj ) => Document.HasElements;
 
         private void onOpenDocument ( object obj )
         {
@@ -514,6 +498,7 @@ namespace FFXIVStaticPlanner.ViewModels
             };
 
             Document.Images.Add ( image );
+
             var displayImage = new Image
             {
                 Source = dropItem.Source,
@@ -522,12 +507,12 @@ namespace FFXIVStaticPlanner.ViewModels
                 Tag = image.UUID
             };
 
-            if ( EnablePlayers || EnableAnnotations )
+            if ( ((Layers.Annotations | Layers.Players) & SelectedLayer) == SelectedLayer )
             {
                 window.playerCanvas.Children.Add ( displayImage );
                 image.Canvas = 1;
             }
-            else if ( EnableBackground )
+            else if ( SelectedLayer == Layers.Background )
             {
                 window.bgCanvas.Children.Add ( displayImage );
                 image.Canvas = 2;
@@ -775,6 +760,33 @@ namespace FFXIVStaticPlanner.ViewModels
             }
 
             _bShapeMove = true;
+        }
+
+        private void onWindowClose ( object sender , CancelEventArgs e )
+        {
+            if ( Document.HasChanges )
+            {
+                var result = MessageBox.Show("There are pending changes to your document.  Do you want to save those changes, or loose them?",
+                "Document Has Chagnes...",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+
+                if ( result == MessageBoxResult.Cancel )
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                else if ( result == MessageBoxResult.Yes )
+                {
+                    SaveDocument.Execute ( null );
+
+                    if ( Document.HasChanges )
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+            }
         }
     }
 }

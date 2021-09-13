@@ -75,7 +75,36 @@ namespace FFXIVStaticPlanner.Data
             }
         }
 
-        private void raisePropertyChanged ( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke ( this , new PropertyChangedEventArgs ( propertyName ) );
+        /// <summary>
+        /// Clears out the contents of this document
+        /// </summary>
+        public void Clear ( )
+        {
+            FileName = string.Empty;
+            _objStrokes.Clear ( );
+            _objImages.Clear ( );
+            _objShapes.Clear ( );
+
+            HasChanges = false;
+        }
+
+        /// <summary>
+        /// Returns a value that indicates whether or not there are elements in this document
+        /// </summary>
+        /// <returns><see langword="true"/> if there are any elements in this document, otherwise <see langword="false"/></returns>
+        public bool HasElements => _objStrokes.Count > 0
+            || _objImages.Count > 0
+            || _objShapes.Count > 0;
+
+        private void raisePropertyChanged ( [CallerMemberName] string propertyName = null )
+        {
+            PropertyChanged?.Invoke ( this , new PropertyChangedEventArgs ( propertyName ) );
+
+            if ( propertyName == nameof ( HasChanges ) )
+            {
+                raisePropertyChanged ( nameof ( HasElements ) );
+            }
+        }
 
         private void onImagesChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
 
