@@ -15,6 +15,9 @@ namespace FFXIVStaticPlanner.Data
         private bool _bChanged;
         private ShapeDataCollection _objShapes;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Document"/> class
+        /// </summary>
         public Document ( )
         {
             _objStrokes = new ( );
@@ -26,8 +29,14 @@ namespace FFXIVStaticPlanner.Data
             _objShapes.CollectionChanged += onShapesChanged;
         }
 
+        /// <summary>
+        /// Raised whenever the value of a property has changed
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// Gets or sets the filename that this document has been stored in
+        /// </summary>
         public string FileName
         {
             get => strFileName;
@@ -38,12 +47,24 @@ namespace FFXIVStaticPlanner.Data
             }
         }
 
+        /// <summary>
+        /// Gets the strokes that this document holds
+        /// </summary>
         public StrokeCollection Strokes => _objStrokes;
 
+        /// <summary>
+        /// Gets the Images that this document holds
+        /// </summary>
         public ObservableCollection<ImageIcon> Images => _objImages;
 
+        /// <summary>
+        /// Gets all of the shapes in this document
+        /// </summary>
         public ShapeDataCollection Shapes => _objShapes;
 
+        /// <summary>
+        /// Gets a value that indicates whether or not this document has changes
+        /// </summary>
         public bool HasChanges
         {
             get => _bChanged;
