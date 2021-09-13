@@ -5,8 +5,15 @@ using System.Linq;
 
 namespace FFXIVStaticPlanner.ViewModels
 {
+    /// <summary>
+    /// Provides additional functionality of objects
+    /// </summary>
     public static class Extensions
     {
+        /// <summary>
+        /// Add a range of items to this collection
+        /// </summary>
+        /// <param name="items">A enumerable that need to be added</param>
         public static void AddRange<T> ( this ObservableCollection<T> collection , IEnumerable<T> items )
         {
             foreach ( var item in items )

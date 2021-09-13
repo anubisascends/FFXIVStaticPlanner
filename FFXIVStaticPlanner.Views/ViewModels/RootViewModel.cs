@@ -18,6 +18,9 @@ using Path = System.IO.Path;
 
 namespace FFXIVStaticPlanner.ViewModels
 {
+    /// <summary>
+    /// Provides the general interaction logic, as well as variables, for the <see cref="RootView"/> class
+    /// </summary>
     public class RootViewModel : ViewModel<RootView>
     {
         private const string c_strPoint = "point";
