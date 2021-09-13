@@ -4,6 +4,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <Version>1.0.1</Version>
+    <Authors>Andrew Riebe</Authors>
+    <Product>FFXIV Static Planner</Product>
+    <Description>This app allows you to generate images that can be used to plan or teach statics how to accomplish a dungone/trial in FFXIV</Description>
+    <AssemblyVersion>1.0.1.1</AssemblyVersion>
+    <FileVersion>1.0.1.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
