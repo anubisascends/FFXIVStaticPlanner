@@ -27,7 +27,8 @@
             </Ribbon.QuickAccessToolBar>
             <RibbonTab Header="Home">
                 <RibbonGroup Header="Document">
-                    <RibbonButton Label="New" LargeImageSource="/FFXIVStaticPlanner.Views;component/Images/document_32xLG.png"/>
+                    <RibbonButton Label="New" LargeImageSource="/FFXIVStaticPlanner.Views;component/Images/document_32xLG.png"
+                                  Command="{Binding NewDocument}"/>
                 </RibbonGroup>
                 <RibbonGroup Header="Edit">
                     <RibbonRadioButton Label="Draw" Command="{Binding ChangeEditMode}" CommandParameter="draw" LargeImageSource="/FFXIVStaticPlanner.Views;component/Images/Pen4_48x.png" IsChecked="True"/>
