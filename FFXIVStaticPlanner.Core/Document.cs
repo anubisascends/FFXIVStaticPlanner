@@ -1,8 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Ink;
+using System.Windows.Shapes;
 
 namespace FFXIVStaticPlanner.Data
 {
@@ -111,5 +116,54 @@ namespace FFXIVStaticPlanner.Data
         private void onStrokesChanged ( object sender , StrokeCollectionChangedEventArgs e ) => HasChanges = true;
 
         private void onShapesChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
+        public void UpdateContents ( Canvas playerCanvas , Canvas bgCanvas )
+        {
+            foreach ( Image image in playerCanvas.Children )
+            {
+                if(Images.FirstOrDefault(x => image.Tag?.Equals(x.UUID) ?? false ) is ImageIcon icon)
+                {
+                    icon.Location = new System.Windows.Point
+                        (
+                        Canvas.GetLeft ( image ) ,
+                        Canvas.GetTop ( image )
+                        );
+                    icon.Size = new System.Windows.Size
+                        (
+                        image.Width ,
+                        image.Height
+                        );
+                }
+            }
+
+            foreach ( FrameworkElement element in bgCanvas.Children )
+            {
+                if ( element is Image image )
+                {
+                    if ( Images.FirstOrDefault ( x => image.Tag?.Equals ( x.UUID ) ?? false ) is ImageIcon icon )
+                    {
+                        icon.Location = new System.Windows.Point
+                            (
+                            Canvas.GetLeft ( image ) ,
+                            Canvas.GetTop ( image )
+                            );
+                        icon.Size = new System.Windows.Size
+                            (
+                            image.Width ,
+                            image.Height
+                            );
+                    }
+                }
+                else if(element is Shape shape)
+                {
+                    if ( Shapes.FirstOrDefault ( x => shape.Tag?.Equals ( x.UUID ) ?? false ) is ShapeData shapeData )
+                    {
+                        shapeData.Left = Canvas.GetLeft ( shape );
+                        shapeData.Top = Canvas.GetTop ( shape );
+                        shapeData.Width = shape.Width;
+                        shapeData.Height = shape.Height;
+                    }
+                }
+            }
+        }
     }
 }

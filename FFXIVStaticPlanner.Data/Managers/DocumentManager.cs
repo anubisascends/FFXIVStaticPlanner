@@ -67,7 +67,12 @@ namespace FFXIVStaticPlanner.Data
                             double.Parse ( imageElem.Attribute ( YAttribute )?.Value ?? "0" )
                         ) ,
                     UUID = Guid.Parse ( imageElem.Attribute ( UUIDAttribute )?.Value ?? Guid.Empty.ToString ( ) ) ,
-                    Canvas = int.Parse ( imageElem.Attribute ( CanvasAttribute )?.Value ?? "1" )
+                    Canvas = int.Parse ( imageElem.Attribute ( CanvasAttribute )?.Value ?? "1" ),
+                    Size = new System.Windows.Size
+                        (
+                            double.Parse ( imageElem.Attribute ( WidthAttribute )?.Value ?? "0" ) ,
+                            double.Parse ( imageElem.Attribute ( HeightAttribute )?.Value ?? "0" )
+                        )
                 } );
             }
 
@@ -132,7 +137,9 @@ namespace FFXIVStaticPlanner.Data
                     new XAttribute ( YAttribute , image.Location.Y ) ,
                     new XAttribute ( ScaleAttribute , image.Scale ) ,
                     new XAttribute ( UUIDAttribute , image.UUID ) ,
-                    new XAttribute ( CanvasAttribute , image.Canvas ) ) );
+                    new XAttribute ( CanvasAttribute , image.Canvas ) ,
+                    new XAttribute ( WidthAttribute , image.Size.Width ) ,
+                    new XAttribute ( HeightAttribute , image.Size.Height ) ) );
             }
 
             // add shapes

@@ -35,5 +35,10 @@ namespace FFXIVStaticPlanner.Data
         {
             get;set;
         }
+
+        public Size Size
+        {
+            get;set;
+        }
     }
 }

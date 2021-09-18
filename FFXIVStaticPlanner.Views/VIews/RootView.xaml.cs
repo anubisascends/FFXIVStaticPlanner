@@ -7,6 +7,9 @@ namespace FFXIVStaticPlanner.Views
     /// </summary>
     public partial class RootView : RibbonWindow
     {
-        public RootView ( ) => InitializeComponent ( );
+        public RootView ( )
+        {
+            InitializeComponent ( );
+        }
     }
 }

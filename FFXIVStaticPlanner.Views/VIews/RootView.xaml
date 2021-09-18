@@ -4,6 +4,7 @@
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:vms="clr-namespace:FFXIVStaticPlanner.ViewModels"
+              xmlns:xaml="using:Microsoft.too"
               Title="Static Planner" Height="450" Width="800">
     <RibbonWindow.Resources>
         <vms:LayersToBoolConverter x:Key="layersToBool"/>
@@ -17,6 +18,9 @@
         </Grid.RowDefinitions>
 
         <Ribbon>
+            <Ribbon.HelpPaneContent>
+                <RibbonButton SmallImageSource="/FFXIVStaticPlanner.Views;component/Images/image.png" Command="{Binding Help}" />
+            </Ribbon.HelpPaneContent>
             <Ribbon.QuickAccessToolBar>
                 <RibbonQuickAccessToolBar>
                     <RibbonButton SmallImageSource="/FFXIVStaticPlanner.Views;component/Images/save_16xLG.png" Command="{Binding SaveDocument}"/>
@@ -265,5 +269,9 @@
                        EditingMode="{Binding EditingMode}" AllowDrop="True" x:Name="inkCanvas" Background="Transparent"
                        IsHitTestVisible="{Binding Path=SelectedLayer, Converter={StaticResource layersToBool}, ConverterParameter={x:Static vms:Layers.Annotations}}"/>
         </Grid>
+
+        <StatusBar Grid.Row="3">
+            <StatusBarItem x:Name="lblStaus">v</StatusBarItem>
+        </StatusBar>
     </Grid>
 </RibbonWindow>
