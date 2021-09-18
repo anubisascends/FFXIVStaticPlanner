@@ -1,6 +1,7 @@
 ﻿using FFXIVStaticPlanner.Core;
 using FFXIVStaticPlanner.Data;
 using FFXIVStaticPlanner.Views;
+using FFXIVStaticPlanner.Views.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -39,9 +41,6 @@ namespace FFXIVStaticPlanner.ViewModels
         private ICommand _undo;
         private ICommand _redo;
         private ICommand _clearFilter;
-        private bool _bAnnotate = true;
-        private bool _bPlayer = false;
-        private bool _bBG = false;
         private string _strFilter;
         private ICollectionView _objView;
         private Cursor _objCursor;
@@ -57,10 +56,11 @@ namespace FFXIVStaticPlanner.ViewModels
         public Shape _shape;
         private bool _bShapeMove;
         private double _dImageSize = 96;
-        private Layers _eLayer = Layers.Annotations;
+        private Layers _eLayer = Layers.Players;
         private ICommand _newDoc;
+        private ICommand _help;
 
-        public RootViewModel ( ) 
+        public RootViewModel ( )
         {
             DrawingAttributes = new ( );
             DrawingAttributes.Color = Colors.Black;
@@ -80,6 +80,7 @@ namespace FFXIVStaticPlanner.ViewModels
 
             Window.bgCanvas.PreviewMouseDown += onBgCanvasMouseDown;
             Window.bgCanvas.PreviewMouseMove += onBgCanvasMouseMove;
+            Window.playerCanvas.PreviewMouseDown += onPlayerCanvasMouseDown;
 
             Window.Closing += onWindowClose;
         }
@@ -209,6 +210,13 @@ namespace FFXIVStaticPlanner.ViewModels
 
         public ICommand NewDocument => _newDoc ??= new CommandHandler ( onNewDocument , canNewDocument );
 
+        public ICommand Help => _help ??= new CommandHandler ( onHelp , canAlwaysExecute );
+
+        private void onHelp ( object obj )
+        {
+            MessageBox.Show ( "Git Gud!" );
+        }
+
         private void onNewDocument ( object obj )
         {
             Document.Clear ( );
@@ -243,8 +251,8 @@ namespace FFXIVStaticPlanner.ViewModels
                 // add shapes to the canvas
                 foreach ( var item in Document.Shapes )
                 {
-                    Shape shape = item.ShapeType == 1 
-                        ? new Rectangle() 
+                    Shape shape = item.ShapeType == 1
+                        ? new Rectangle()
                         : new Ellipse();
 
                     shape.Fill = new SolidColorBrush ( item.Color );
@@ -272,8 +280,8 @@ namespace FFXIVStaticPlanner.ViewModels
                         Image img = new Image
                         {
                             Source = image.Source,
-                            Width = _dImageSize,
-                            Height = _dImageSize,
+                            Width = item.Size.Width,
+                            Height = item.Size.Height,
                             Tag = item.UUID
                         };
 
@@ -319,14 +327,6 @@ namespace FFXIVStaticPlanner.ViewModels
 
         private bool canClearFilter ( object obj ) => !string.IsNullOrEmpty ( FilterText );
 
-        private void updateFilter ( ) => _objView.Filter = ( object obj ) =>
-                                       {
-                                           return obj is ImageData objImageData
-                                               ? objImageData.Name.Contains ( FilterText, StringComparison.InvariantCultureIgnoreCase ) 
-                                                    || objImageData.Group.Contains ( FilterText, StringComparison.InvariantCultureIgnoreCase )
-                                               : false;
-                                       };
-
         private void onRedo ( object obj ) => throw new System.NotImplementedException ( );
 
         private bool canRedo ( object obj ) => throw new System.NotImplementedException ( );
@@ -357,7 +357,7 @@ namespace FFXIVStaticPlanner.ViewModels
 
         private void onChangeBrushSize ( object obj )
         {
-            
+
         }
 
         private void onChangeColor ( object obj ) => DrawingAttributes.Color = obj.ToString ( ) switch
@@ -375,6 +375,7 @@ namespace FFXIVStaticPlanner.ViewModels
         private void onSaveDocument ( object obj )
         {
             string strFileName = string.Empty;
+            Document.UpdateContents ( Window.playerCanvas , Window.bgCanvas );
 
             if ( string.IsNullOrEmpty ( strFileName = Document.FileName ) )
             {
@@ -416,13 +417,13 @@ namespace FFXIVStaticPlanner.ViewModels
                 {
                     var name = Path.GetFileNameWithoutExtension(item);
 
-                    switch ( Path.GetExtension(item) )
+                    switch ( Path.GetExtension ( item ) )
                     {
                         case ".svg":
-                            ImageManager.AddImage ( File.ReadAllText(item) , name , name );
+                            ImageManager.AddImage ( File.ReadAllText ( item ) , name , name );
                             break;
                         default:
-                            ImageManager.AddImage ( File.ReadAllBytes(item) , name , name );
+                            ImageManager.AddImage ( File.ReadAllBytes ( item ) , name , name );
                             break;
                     }
                 }
@@ -487,7 +488,6 @@ namespace FFXIVStaticPlanner.ViewModels
         {
             var p = e.GetPosition(sender as IInputElement);
             var dropItem = e.Data.GetData(typeof(ImageData)) as ImageData;
-            var window = Window as RootView;
             var image = new ImageIcon
             {
                 Display = dropItem.Display,
@@ -504,17 +504,18 @@ namespace FFXIVStaticPlanner.ViewModels
                 Source = dropItem.Source,
                 Width = _dImageSize,
                 Height = _dImageSize,
-                Tag = image.UUID
+                Tag = image.UUID,
+                Stretch = Stretch.Fill
             };
 
             if ( ((Layers.Annotations | Layers.Players) & SelectedLayer) == SelectedLayer )
             {
-                window.playerCanvas.Children.Add ( displayImage );
+                Window.playerCanvas.Children.Add ( displayImage );
                 image.Canvas = 1;
             }
             else if ( SelectedLayer == Layers.Background )
             {
-                window.bgCanvas.Children.Add ( displayImage );
+                Window.bgCanvas.Children.Add ( displayImage );
                 image.Canvas = 2;
             }
 
@@ -582,20 +583,26 @@ namespace FFXIVStaticPlanner.ViewModels
             _objCurrentImage = sender as Image;
             var parent = _objCurrentImage?.Parent as Canvas;
 
+            removeAllAdorners ( _objCurrentImage.Parent as Canvas );
+
             if ( parent.Cursor.Equals ( Cursors.Hand ) )
             {
                 parent.Children.Remove ( _objCurrentImage );
                 Document.Images.Remove ( x => x.UUID.Equals ( _objCurrentImage.Tag ) );
+                return;
             }
-            else
-            {
-                _objCurrentImage = sender as Image;
-                _bImageMove = true;
-            }
+
+            _objCurrentImage = sender as Image;
+            _bImageMove = true;
+            addAddorner ( _objCurrentImage );
         }
+
+        private void onPlayerCanvasMouseDown ( object sender , MouseButtonEventArgs e ) => removeAllAdorners ( Window.playerCanvas );
 
         private void onBgCanvasMouseDown ( object sender , MouseButtonEventArgs e )
         {
+            removeAllAdorners ( Window.bgCanvas );
+
             _startPoint = e.GetPosition ( Window.bgCanvas );
 
             if ( !DrawShape )
@@ -748,7 +755,11 @@ namespace FFXIVStaticPlanner.ViewModels
                 return;
             }
 
+            removeAllAdorners ( Window.bgCanvas );
+
             _shape = sender as Shape;
+
+            addAddorner ( _shape );
 
             if ( Cursor.Equals ( Cursors.Hand ) )
             {
@@ -788,5 +799,37 @@ namespace FFXIVStaticPlanner.ViewModels
                 }
             }
         }
+
+        private void updateFilter ( ) => _objView.Filter = ( object obj ) =>
+        {
+            return obj is ImageData objImageData
+                ? objImageData.Name.Contains ( FilterText , StringComparison.InvariantCultureIgnoreCase )
+                     || objImageData.Group.Contains ( FilterText , StringComparison.InvariantCultureIgnoreCase )
+                : false;
+        };
+
+        private void addAddorner ( dynamic item )
+        {
+            // add the new adorner to this item
+            var adornerLayer = AdornerLayer.GetAdornerLayer ( item );
+            adornerLayer.Add ( new HandleAdorner ( item ) );
+        }
+
+        private void removeAllAdorners ( Canvas canvas )
+        {
+            // remove existing adorners
+            foreach ( var item in canvas.Children )
+            {
+                var adornerLayer = AdornerLayer.GetAdornerLayer ( item as Visual );
+                var adorners = adornerLayer.GetAdorners(item as UIElement) ?? new Adorner[0];
+
+                foreach ( var adorner in adorners )
+                {
+                    adornerLayer.Remove ( adorner );
+                }
+            }
+        }
+
+        public void SetVersion ( string version ) => Window.lblStaus.Content = $"v{version}";
     }
 }

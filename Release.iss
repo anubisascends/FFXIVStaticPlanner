@@ -6,7 +6,7 @@ Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\FFXIVStaticPlanner.Data.dll
 Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\FFXIVStaticPlanner.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\FFXIVStaticPlanner.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\FFXIVStaticPlanner.Views.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\Metadata.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "FFXIVStaticPlanner.Data\Metadata - Copy.xml"; DestDir: "{app}"; DestName: "Metadata.xml"; Flags: ignoreversion
 Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\SharpVectors.Converters.Wpf.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\SharpVectors.Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "FFXIVStaticPlanner\bin\Debug\net5.0-windows\SharpVectors.Css.dll"; DestDir: "{app}"; Flags: ignoreversion
