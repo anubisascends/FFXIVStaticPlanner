@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FFXIVStaticPlanner.Core\FFXIVStaticPlanner.Core.csproj" />
     <ProjectReference Include="..\FFXIVStaticPlanner.Data\FFXIVStaticPlanner.Data.csproj" />
   </ItemGroup>

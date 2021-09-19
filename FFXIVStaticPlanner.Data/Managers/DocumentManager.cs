@@ -16,6 +16,7 @@ namespace FFXIVStaticPlanner.Data
         private const string ShapeElement = "Shape";
         private const string RootElement = "Document";
         private const string StylusPointsElement = "StylusPoints";
+        private const string TextElement = "Text";
 
         private const string XAttribute = "x";
         private const string YAttribute = "y";
@@ -29,6 +30,7 @@ namespace FFXIVStaticPlanner.Data
         private const string HeightAttribute = "height";
         private const string CanvasAttribute = "canvas";
         private const string ColorAttribute = "color";
+        private const string HighlightAttribute = "highlight";
 
         public Document LoadDocument ( string filename )
         {
@@ -51,7 +53,13 @@ namespace FFXIVStaticPlanner.Data
 
                 }
 
-                result.Strokes.Add ( new Stroke ( points , new DrawingAttributes { Color = ( Color )ColorConverter.ConvertFromString ( strokeElem.Attribute ( ColorAttribute ).Value ?? "#FFFFFF" ) } ) );
+                result.Strokes.Add ( new Stroke ( points , new DrawingAttributes
+                {
+                    Color = ( Color )ColorConverter.ConvertFromString ( strokeElem.Attribute ( ColorAttribute ).Value ?? "#FFFFFF" ) ,
+                    IsHighlighter = bool.Parse ( strokeElem.Attribute ( HighlightAttribute )?.Value ?? "false" ) ,
+                    Width = double.Parse ( strokeElem.Attribute ( WidthAttribute )?.Value ?? "0" ) ,
+                    Height = double.Parse ( strokeElem.Attribute ( HeightAttribute )?.Value ?? "0" )
+                } ) );
             }
 
             // add images
@@ -67,7 +75,7 @@ namespace FFXIVStaticPlanner.Data
                             double.Parse ( imageElem.Attribute ( YAttribute )?.Value ?? "0" )
                         ) ,
                     UUID = Guid.Parse ( imageElem.Attribute ( UUIDAttribute )?.Value ?? Guid.Empty.ToString ( ) ) ,
-                    Canvas = int.Parse ( imageElem.Attribute ( CanvasAttribute )?.Value ?? "1" ),
+                    Canvas = int.Parse ( imageElem.Attribute ( CanvasAttribute )?.Value ?? "1" ) ,
                     Size = new System.Windows.Size
                         (
                             double.Parse ( imageElem.Attribute ( WidthAttribute )?.Value ?? "0" ) ,
@@ -91,6 +99,21 @@ namespace FFXIVStaticPlanner.Data
                 } );
             }
 
+            // add text
+            foreach ( var textElem in document.Root.Element ( TextElement ).Elements ( ) )
+            {
+                result.Text.Add ( new TextData
+                {
+                    Color = new SolidColorBrush ( ( Color )ColorConverter.ConvertFromString ( textElem.Attribute ( ColorAttribute )?.Value ?? "#FFFFFF" ) ) ,
+                    Height = double.Parse ( textElem.Attribute ( HeightAttribute )?.Value ?? "0" ) ,
+                    Width = double.Parse ( textElem.Attribute ( WidthAttribute )?.Value ?? "0" ) ,
+                    X = double.Parse ( textElem.Attribute ( XAttribute )?.Value ?? "0" ) ,
+                    Y = double.Parse ( textElem.Attribute ( YAttribute )?.Value ?? "0" ) ,
+                    UUID = Guid.Parse ( textElem.Attribute ( UUIDAttribute )?.Value ?? Guid.Empty.ToString ( ) ) ,
+                    Text = textElem.Value
+                } );
+            }
+
             result.FileName = filename;
 
             return result;
@@ -101,18 +124,23 @@ namespace FFXIVStaticPlanner.Data
             var xml = new XDocument( new XElement(RootElement,
                 new XElement(StrokesElement),
                 new XElement(ImagesElement),
-                new XElement(ShapesElement)));
+                new XElement(ShapesElement),
+                new XElement(TextElement)));
 
             var strokesElem = xml.Root.Element(StrokesElement);
             var shapesElem = xml.Root.Element(ShapesElement);
             var imagesElem = xml.Root.Element(ImagesElement);
+            var textElem = xml.Root.Element(TextElement);
 
 
             // add strokes
             foreach ( var stroke in document.Strokes )
             {
                 var strokeElem = new XElement(StrokeElement,
-                    new XAttribute(ColorAttribute, stroke.DrawingAttributes.Color));
+                    new XAttribute(ColorAttribute, stroke.DrawingAttributes.Color),
+                    new XAttribute(HighlightAttribute, stroke.DrawingAttributes.IsHighlighter),
+                    new XAttribute(WidthAttribute, stroke.DrawingAttributes.Width),
+                    new XAttribute(HeightAttribute, stroke.DrawingAttributes.Height));
 
                 foreach ( var point in stroke.StylusPoints )
                 {
@@ -153,6 +181,19 @@ namespace FFXIVStaticPlanner.Data
                     new XAttribute ( XAttribute , shape.Left ) ,
                     new XAttribute ( YAttribute , shape.Top ) ,
                     new XAttribute ( ColorAttribute , shape.Color ) ) );
+            }
+
+            // add text
+            foreach ( var text in document.Text )
+            {
+                textElem.Add ( new XElement ( TextElement ,
+                    new XAttribute ( UUIDAttribute , text.UUID ) ,
+                    new XAttribute ( ColorAttribute , text.Color ) ,
+                    new XAttribute ( XAttribute , text.X ) ,
+                    new XAttribute ( YAttribute , text.Y ) ,
+                    new XAttribute ( HeightAttribute , text.Height ) ,
+                    new XAttribute ( WidthAttribute , text.Width ) ,
+                    text.Text ) );
             }
 
             xml.Save ( filename );
