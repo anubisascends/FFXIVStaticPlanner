@@ -123,8 +123,6 @@ namespace FFXIVStaticPlanner.Views.ViewModels
             Canvas.SetTop ( AdornedElement , Math.Abs(top) );
             element.Width = Math.Abs(width);
             element.Height = Math.Abs(height);
-            
-            
         }
 
         protected override void OnRender ( DrawingContext drawingContext )

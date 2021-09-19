@@ -180,7 +180,7 @@ namespace FFXIVStaticPlanner.Data
                             );
                     }
                 }
-                else if ( element is Shape shape )
+                else if(element is Shape shape)
                 {
                     if ( Shapes.FirstOrDefault ( x => shape.Tag?.Equals ( x.UUID ) ?? false ) is ShapeData shapeData )
                     {

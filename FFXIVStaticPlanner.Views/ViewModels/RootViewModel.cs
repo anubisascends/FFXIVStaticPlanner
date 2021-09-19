@@ -601,7 +601,6 @@ namespace FFXIVStaticPlanner.ViewModels
             var p = e.GetPosition(sender as IInputElement);
             var dropItem = e.Data.GetData(typeof(ImageData)) as ImageData;
             var iCanvas = 0;
-
             var displayImage = new Image
             {
                 Source = dropItem.Source,
