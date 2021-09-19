@@ -4,8 +4,11 @@
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:vms="clr-namespace:FFXIVStaticPlanner.ViewModels"
-              xmlns:xaml="using:Microsoft.too"
+              xmlns:tk="http://schemas.xceed.com/wpf/xaml/toolkit"
               Title="Static Planner" Height="450" Width="800">
+    <RibbonWindow.InputBindings>
+        <KeyBinding Key="Delete" Command="{Binding Delete}"/>
+    </RibbonWindow.InputBindings>
     <RibbonWindow.Resources>
         <vms:LayersToBoolConverter x:Key="layersToBool"/>
     </RibbonWindow.Resources>
@@ -85,115 +88,26 @@
                         </RibbonButton.SmallImageSource>
                     </RibbonButton>
                 </RibbonGroup>
-                <RibbonGroup Header="Drawing Colors">
-                    <RibbonRadioButton Label="Black" Command="{Binding ChangeColor}" CommandParameter="black" IsChecked="True">
-                        <RibbonRadioButton.LargeImageSource>
-                            <DrawingImage>
-                                <DrawingImage.Drawing>
-                                    <GeometryDrawing>
-                                        <GeometryDrawing.Geometry>
-                                            <GeometryGroup>
-                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
-                                            </GeometryGroup>
-                                        </GeometryDrawing.Geometry>
-                                        <GeometryDrawing.Brush>
-                                            <SolidColorBrush Color="Black"/>
-                                        </GeometryDrawing.Brush>
-                                    </GeometryDrawing>
-                                </DrawingImage.Drawing>
-                            </DrawingImage>
-                        </RibbonRadioButton.LargeImageSource>
-                    </RibbonRadioButton>
-                    <RibbonRadioButton Label="Red" Command="{Binding ChangeColor}" CommandParameter="red">
-                        <RibbonRadioButton.LargeImageSource>
-                            <DrawingImage>
-                                <DrawingImage.Drawing>
-                                    <GeometryDrawing>
-                                        <GeometryDrawing.Geometry>
-                                            <GeometryGroup>
-                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
-                                            </GeometryGroup>
-                                        </GeometryDrawing.Geometry>
-                                        <GeometryDrawing.Brush>
-                                            <SolidColorBrush Color="Red"/>
-                                        </GeometryDrawing.Brush>
-                                    </GeometryDrawing>
-                                </DrawingImage.Drawing>
-                            </DrawingImage>
-                        </RibbonRadioButton.LargeImageSource>
-                    </RibbonRadioButton>
-                    <RibbonRadioButton Label="Blue" Command="{Binding ChangeColor}" CommandParameter="blue">
-                        <RibbonRadioButton.LargeImageSource>
-                            <DrawingImage>
-                                <DrawingImage.Drawing>
-                                    <GeometryDrawing>
-                                        <GeometryDrawing.Geometry>
-                                            <GeometryGroup>
-                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
-                                            </GeometryGroup>
-                                        </GeometryDrawing.Geometry>
-                                        <GeometryDrawing.Brush>
-                                            <SolidColorBrush Color="Blue"/>
-                                        </GeometryDrawing.Brush>
-                                    </GeometryDrawing>
-                                </DrawingImage.Drawing>
-                            </DrawingImage>
-                        </RibbonRadioButton.LargeImageSource>
-                    </RibbonRadioButton>
-                    <RibbonRadioButton Label="Green" Command="{Binding ChangeColor}" CommandParameter="green">
-                        <RibbonRadioButton.LargeImageSource>
-                            <DrawingImage>
-                                <DrawingImage.Drawing>
-                                    <GeometryDrawing>
-                                        <GeometryDrawing.Geometry>
-                                            <GeometryGroup>
-                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
-                                            </GeometryGroup>
-                                        </GeometryDrawing.Geometry>
-                                        <GeometryDrawing.Brush>
-                                            <SolidColorBrush Color="Green"/>
-                                        </GeometryDrawing.Brush>
-                                    </GeometryDrawing>
-                                </DrawingImage.Drawing>
-                            </DrawingImage>
-                        </RibbonRadioButton.LargeImageSource>
-                    </RibbonRadioButton>
-                    <RibbonRadioButton Label="Yellow" Command="{Binding ChangeColor}" CommandParameter="yellow">
-                        <RibbonRadioButton.LargeImageSource>
-                            <DrawingImage>
-                                <DrawingImage.Drawing>
-                                    <GeometryDrawing>
-                                        <GeometryDrawing.Geometry>
-                                            <GeometryGroup>
-                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
-                                            </GeometryGroup>
-                                        </GeometryDrawing.Geometry>
-                                        <GeometryDrawing.Brush>
-                                            <SolidColorBrush Color="Yellow"/>
-                                        </GeometryDrawing.Brush>
-                                    </GeometryDrawing>
-                                </DrawingImage.Drawing>
-                            </DrawingImage>
-                        </RibbonRadioButton.LargeImageSource>
-                    </RibbonRadioButton>
-                    <RibbonRadioButton Label="Gray" Command="{Binding ChangeColor}" CommandParameter="gray">
-                        <RibbonRadioButton.LargeImageSource>
-                            <DrawingImage>
-                                <DrawingImage.Drawing>
-                                    <GeometryDrawing>
-                                        <GeometryDrawing.Geometry>
-                                            <GeometryGroup>
-                                                <EllipseGeometry Center="50,50" RadiusX="45" RadiusY="45"/>
-                                            </GeometryGroup>
-                                        </GeometryDrawing.Geometry>
-                                        <GeometryDrawing.Brush>
-                                            <SolidColorBrush Color="Gray"/>
-                                        </GeometryDrawing.Brush>
-                                    </GeometryDrawing>
-                                </DrawingImage.Drawing>
-                            </DrawingImage>
-                        </RibbonRadioButton.LargeImageSource>
-                    </RibbonRadioButton>
+                <RibbonGroup Header="Drawing Attributes">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+                        <tk:ColorPicker Width="75" SelectedColor="{Binding SelectedColor}"/>
+                        <Label Grid.Row="1" HorizontalAlignment="Center">Color</Label>
+                    </Grid>
+                    <RibbonCheckBox Label="Highlight" IsChecked="{Binding IsHighlighter}"/>
+                </RibbonGroup>
+                <RibbonGroup Header="Waymarks">
+                    <RibbonButton Label="A" Command="{Binding AddWaymark}" CommandParameter="A"/>
+                    <RibbonButton Label="B" Command="{Binding AddWaymark}" CommandParameter="B"/>
+                    <RibbonButton Label="C" Command="{Binding AddWaymark}" CommandParameter="C"/>
+                    <RibbonButton Label="D" Command="{Binding AddWaymark}" CommandParameter="D"/>
+                    <RibbonButton Label="1" Command="{Binding AddWaymark}" CommandParameter="1"/>
+                    <RibbonButton Label="2" Command="{Binding AddWaymark}" CommandParameter="2"/>
+                    <RibbonButton Label="3" Command="{Binding AddWaymark}" CommandParameter="3"/>
+                    <RibbonButton Label="4" Command="{Binding AddWaymark}" CommandParameter="4"/>
                 </RibbonGroup>
             </RibbonTab>
             <RibbonTab Header="Images">

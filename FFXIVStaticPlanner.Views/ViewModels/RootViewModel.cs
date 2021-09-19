@@ -4,12 +4,14 @@ using FFXIVStaticPlanner.Views;
 using FFXIVStaticPlanner.Views.ViewModels;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Ribbon;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Ink;
@@ -34,7 +36,6 @@ namespace FFXIVStaticPlanner.ViewModels
         private ICommand _refrechImages;
         private ICommand _deleteImage;
         private ICommand _saveDocument;
-        private ICommand _changeColor;
         private ICommand _changeBrushSize;
         private InkCanvasEditingMode _eMode = InkCanvasEditingMode.Ink;
         private ICommand _changeEditMode;
@@ -59,6 +60,10 @@ namespace FFXIVStaticPlanner.ViewModels
         private Layers _eLayer = Layers.Players;
         private ICommand _newDoc;
         private ICommand _help;
+        private ICommand _addWaymark;
+        private bool _bTextMove;
+        private TextBlock _objCurrentText;
+        private ICommand _delete;
 
         public RootViewModel ( )
         {
@@ -93,6 +98,35 @@ namespace FFXIVStaticPlanner.ViewModels
         private IDocumentManager DocumentManager
         {
             get;
+        }
+
+        public bool IsHighlighter
+        {
+            get => DrawingAttributes.IsHighlighter;
+            set
+            {
+                DrawingAttributes.IsHighlighter = value;
+                RaisePropertyChanged ( );
+
+                if ( value )
+                {
+                    DrawingAttributes.Height *= 10;
+                }
+                else
+                {
+                    DrawingAttributes.Height /= 10;
+                }
+            }
+        }
+
+        public Color SelectedColor
+        {
+            get => DrawingAttributes.Color;
+            set
+            {
+                DrawingAttributes.Color = value;
+                RaisePropertyChanged ( );
+            }
         }
 
         public Cursor Cursor
@@ -190,8 +224,6 @@ namespace FFXIVStaticPlanner.ViewModels
 
         public ICommand SaveDocument => _saveDocument ??= new CommandHandler ( onSaveDocument , canSaveDocument );
 
-        public ICommand ChangeColor => _changeColor ??= new CommandHandler ( onChangeColor , canAlwaysExecute );
-
         public ICommand ChangeBrushSize => _changeBrushSize ??= new CommandHandler ( onChangeBrushSize , canAlwaysExecute );
 
         public ICommand ChangeEditMode => _changeEditMode ??= new CommandHandler ( onChangeEditMode , canAlwaysExecute );
@@ -211,6 +243,96 @@ namespace FFXIVStaticPlanner.ViewModels
         public ICommand NewDocument => _newDoc ??= new CommandHandler ( onNewDocument , canNewDocument );
 
         public ICommand Help => _help ??= new CommandHandler ( onHelp , canAlwaysExecute );
+
+        public ICommand AddWaymark => _addWaymark ??= new CommandHandler ( onAddWaymark , canAlwaysExecute );
+
+        public ICommand Delete => _delete ??= new CommandHandler ( onDelete , canAlwaysExecute );
+
+        private void onDelete ( object obj )
+        {
+            StrokeCollection selectedStrokes = Window.inkCanvas.GetSelectedStrokes();
+
+            if ( selectedStrokes.Count > 0 )
+            {
+                foreach ( var item in selectedStrokes )
+                {
+                    Document.Strokes.Remove ( item );
+                }
+
+                return;
+            }
+
+            List<object> selectedItems = new();
+
+            foreach ( Visual item in Window.playerCanvas.Children )
+            {
+                if ( AdornerLayer.GetAdornerLayer ( item ) is AdornerLayer layer )
+                {
+                    if ( layer.GetAdorners(item as UIElement) is Adorner[] )
+                    {
+                        selectedItems.Add ( item );
+                    }
+                }
+            }
+
+            foreach ( Visual item in Window.bgCanvas.Children )
+            {
+                if ( AdornerLayer.GetAdornerLayer ( item ) is AdornerLayer layer )
+                {
+                    if ( layer.GetAdorners ( item as UIElement ) is Adorner[] )
+                    {
+                        selectedItems.Add ( item );
+                    }
+                }
+            }
+
+            foreach ( UIElement item in selectedItems )
+            {
+                Window.playerCanvas.Children.Remove ( item );
+                Window.bgCanvas.Children.Remove ( item );
+            }
+        }
+
+        private void onAddWaymark ( object obj )
+        {
+            if ( obj is string str )
+            {
+                TextBlock tbx = new()
+                {
+                    Text = str,
+                    FontSize = 72,
+                    FontFamily = new FontFamily("Arial"),
+                    Tag = Guid.NewGuid()
+                };
+
+                tbx.PreviewMouseDown += onTextMouseDown;
+                tbx.PreviewMouseUp += onTextMouseUp;
+                tbx.PreviewMouseMove += onTextMouseMove;
+
+                Document.Text.Add ( new TextData { UUID = ( Guid )tbx.Tag } );
+
+                switch ( str )
+                {
+                    case "A":
+                    case "1":
+                        tbx.Foreground = Brushes.Red;
+                        break;
+                    case "B":
+                    case "2":
+                        tbx.Foreground = Brushes.Yellow;
+                        break;
+                    case "C":
+                    case "3":
+                        tbx.Foreground = Brushes.Blue;
+                        break;
+                    default:
+                        tbx.Foreground = Brushes.Magenta;
+                        break;
+                }
+
+                Window.playerCanvas.Children.Add ( tbx );
+            }
+        }
 
         private void onHelp ( object obj )
         {
@@ -360,16 +482,6 @@ namespace FFXIVStaticPlanner.ViewModels
 
         }
 
-        private void onChangeColor ( object obj ) => DrawingAttributes.Color = obj.ToString ( ) switch
-        {
-            "blue" => Colors.Blue,
-            "red" => Colors.Red,
-            "yellow" => Colors.Yellow,
-            "green" => Colors.Green,
-            "gray" => Colors.Gray,
-            _ => Colors.Black
-        };
-
         private bool canSaveDocument ( object obj ) => Document?.HasChanges ?? false;
 
         private void onSaveDocument ( object obj )
@@ -488,39 +600,32 @@ namespace FFXIVStaticPlanner.ViewModels
         {
             var p = e.GetPosition(sender as IInputElement);
             var dropItem = e.Data.GetData(typeof(ImageData)) as ImageData;
-            var image = new ImageIcon
-            {
-                Display = dropItem.Display,
-                Id = dropItem.ID,
-                Location = p,
-                Scale = new Size(100,100),
-                UUID = Guid.NewGuid()
-            };
-
-            Document.Images.Add ( image );
+            var iCanvas = 0;
 
             var displayImage = new Image
             {
                 Source = dropItem.Source,
                 Width = _dImageSize,
                 Height = _dImageSize,
-                Tag = image.UUID,
+                Tag = Guid.NewGuid(),
                 Stretch = Stretch.Fill
             };
 
             if ( ((Layers.Annotations | Layers.Players) & SelectedLayer) == SelectedLayer )
             {
                 Window.playerCanvas.Children.Add ( displayImage );
-                image.Canvas = 1;
+                iCanvas = 1;
             }
             else if ( SelectedLayer == Layers.Background )
             {
                 Window.bgCanvas.Children.Add ( displayImage );
-                image.Canvas = 2;
+                iCanvas = 2;
             }
 
-            Canvas.SetLeft ( displayImage , image.Location.X - (displayImage.Width / 2) );
-            Canvas.SetTop ( displayImage , image.Location.Y - (displayImage.Height / 2) );
+            Document.Images.Add ( new ImageIcon { Id = dropItem.ID , UUID = ( Guid )displayImage.Tag, Canvas = iCanvas } );
+
+            Canvas.SetLeft ( displayImage , p.X - (displayImage.Width / 2) );
+            Canvas.SetTop ( displayImage , p.Y - (displayImage.Height / 2) );
 
             _bEnableDrag = false;
 
@@ -595,6 +700,57 @@ namespace FFXIVStaticPlanner.ViewModels
             _objCurrentImage = sender as Image;
             _bImageMove = true;
             addAddorner ( _objCurrentImage );
+        }
+
+        private void onTextMouseUp ( object sender , MouseButtonEventArgs e )
+        {
+            if ( _bTextMove )
+            {
+                _bTextMove = false;
+
+                // todo: add update to text location
+
+                _objCurrentText = null;
+            }
+        }
+
+        private void onTextMouseMove ( object sender , MouseEventArgs e )
+        {
+            if ( _bTextMove )
+            {
+                var p = e.GetPosition(Window.playerCanvas);
+
+                double width = _objCurrentText.ActualWidth / 2;
+                double height = _objCurrentText.ActualHeight / 2;
+
+                if ( p.X > width )
+                {
+                    Canvas.SetLeft ( _objCurrentText , p.X - width );
+                }
+
+                if ( p.Y > height )
+                {
+                    Canvas.SetTop ( _objCurrentText , p.Y - height );
+                }
+            }
+        }
+
+        private void onTextMouseDown ( object sender , MouseButtonEventArgs e )
+        {
+            _objCurrentText = sender as TextBlock;
+            var parent = _objCurrentText?.Parent as Canvas;
+
+            removeAllAdorners ( parent );
+
+            if ( parent.Cursor.Equals ( Cursors.Hand ) )
+            {
+                parent.Children.Remove ( _objCurrentText );
+                Document.Images.Remove ( x => x.UUID.Equals ( _objCurrentText.Tag ) );
+                return;
+            }
+
+            _bTextMove = true;
+            addAddorner ( _objCurrentText );
         }
 
         private void onPlayerCanvasMouseDown ( object sender , MouseButtonEventArgs e ) => removeAllAdorners ( Window.playerCanvas );
@@ -764,8 +920,8 @@ namespace FFXIVStaticPlanner.ViewModels
             if ( Cursor.Equals ( Cursors.Hand ) )
             {
                 Window.bgCanvas.Children.Remove ( _shape );
-                _shape = null;
                 Document.Shapes.Remove ( x => _shape.Tag?.Equals ( x.UUID ) ?? false );
+                _shape = null;
 
                 return;
             }

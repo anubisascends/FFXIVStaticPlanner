@@ -11,7 +11,6 @@ using System.Windows.Shapes;
 
 namespace FFXIVStaticPlanner.Data
 {
-
     public class Document : INotifyPropertyChanged
     {
         private string strFileName;
@@ -19,6 +18,7 @@ namespace FFXIVStaticPlanner.Data
         private ObservableCollection<ImageIcon> _objImages;
         private bool _bChanged;
         private ShapeDataCollection _objShapes;
+        private ObservableCollection<TextData> _objText;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Document"/> class
@@ -28,10 +28,12 @@ namespace FFXIVStaticPlanner.Data
             _objStrokes = new ( );
             _objImages = new ( );
             _objShapes = new ( );
+            _objText = new ( );
 
             _objStrokes.StrokesChanged += onStrokesChanged;
             _objImages.CollectionChanged += onImagesChanged;
             _objShapes.CollectionChanged += onShapesChanged;
+            _objText.CollectionChanged += onTextChanged;
         }
 
         /// <summary>
@@ -66,6 +68,11 @@ namespace FFXIVStaticPlanner.Data
         /// Gets all of the shapes in this document
         /// </summary>
         public ShapeDataCollection Shapes => _objShapes;
+
+        /// <summary>
+        /// Gets all of the text in this document
+        /// </summary>
+        public ObservableCollection<TextData> Text => _objText;
 
         /// <summary>
         /// Gets a value that indicates whether or not this document has changes
@@ -111,30 +118,50 @@ namespace FFXIVStaticPlanner.Data
             }
         }
 
+        private void onTextChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
+
         private void onImagesChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
 
         private void onStrokesChanged ( object sender , StrokeCollectionChangedEventArgs e ) => HasChanges = true;
 
         private void onShapesChanged ( object sender , NotifyCollectionChangedEventArgs e ) => HasChanges = true;
+
         public void UpdateContents ( Canvas playerCanvas , Canvas bgCanvas )
         {
-            foreach ( Image image in playerCanvas.Children )
+            // player canvas items
+            foreach ( var item in playerCanvas.Children )
             {
-                if(Images.FirstOrDefault(x => image.Tag?.Equals(x.UUID) ?? false ) is ImageIcon icon)
+                if ( item is Image image )
                 {
-                    icon.Location = new System.Windows.Point
-                        (
-                        Canvas.GetLeft ( image ) ,
-                        Canvas.GetTop ( image )
-                        );
-                    icon.Size = new System.Windows.Size
-                        (
-                        image.Width ,
-                        image.Height
-                        );
+                    if ( Images.FirstOrDefault ( x => image.Tag?.Equals ( x.UUID ) ?? false ) is ImageIcon icon )
+                    {
+                        icon.Location = new System.Windows.Point
+                            (
+                            Canvas.GetLeft ( image ) ,
+                            Canvas.GetTop ( image )
+                            );
+                        icon.Size = new System.Windows.Size
+                            (
+                            image.Width ,
+                            image.Height
+                            );
+                    }
+                }
+                else if ( item is TextBlock tbx )
+                {
+                    if ( Text.FirstOrDefault ( x => tbx.Tag?.Equals ( x.UUID ) ?? false ) is TextData textData )
+                    {
+                        textData.Color = tbx.Foreground;
+                        textData.Height = tbx.ActualHeight;
+                        textData.Width = tbx.ActualWidth;
+                        textData.X = Canvas.GetLeft ( tbx );
+                        textData.Y = Canvas.GetTop ( tbx );
+                        textData.Text = tbx.Text;
+                    }
                 }
             }
 
+            // background items
             foreach ( FrameworkElement element in bgCanvas.Children )
             {
                 if ( element is Image image )
@@ -153,7 +180,7 @@ namespace FFXIVStaticPlanner.Data
                             );
                     }
                 }
-                else if(element is Shape shape)
+                else if ( element is Shape shape )
                 {
                     if ( Shapes.FirstOrDefault ( x => shape.Tag?.Equals ( x.UUID ) ?? false ) is ShapeData shapeData )
                     {
@@ -164,6 +191,8 @@ namespace FFXIVStaticPlanner.Data
                     }
                 }
             }
+
+            HasChanges = false;
         }
     }
 }
