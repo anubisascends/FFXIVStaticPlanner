@@ -32,6 +32,7 @@ Source: "FFXIVStaticPlanner\bin\Release\net5.0-windows\ro\Xceed.Wpf.AvalonDock.r
 Source: "FFXIVStaticPlanner\bin\Release\net5.0-windows\ru\Xceed.Wpf.AvalonDock.resources.dll"; DestDir: "{app}\ru"
 Source: "FFXIVStaticPlanner\bin\Release\net5.0-windows\sv\Xceed.Wpf.AvalonDock.resources.dll"; DestDir: "{app}\sv"
 Source: "FFXIVStaticPlanner\bin\Release\net5.0-windows\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll"; DestDir: "{app}\zh-Hans"
+Source: "FFXIVStaticPlanner\bin\Release\net5.0-windows\FFXIVStaticPlanner.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\Images"
